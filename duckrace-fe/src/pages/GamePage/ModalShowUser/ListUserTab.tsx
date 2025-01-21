@@ -24,7 +24,7 @@ const ListUserTab = ({ handleChangeTab }: IListUserTabProps) => {
             className='flex items-center justify-between h-[50px] border-b border-gray-500 text-gray-800 font-titan'
           >
             <span className='ml-2'>{index + 1}</span>
-            <span className=''>{player.name}</span>
+            <span className=''>{player.name ?? player.user?.display_name}</span>
             <span
               onClick={() => handleRemoveUser(player.id)}
               className='w-[30px] h-[30px] cursor-pointer hover:text-red-700 hover:shadow-inner rounded-full flex items-center justify-center mr-2'

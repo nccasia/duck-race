@@ -9,6 +9,14 @@ export interface IPlayer {
   name: string;
   score: IScore;
   order: number;
+  role_id?: string[];
+  userChannelId?: string;
+  user?: {
+    display_name: string;
+    user_name: string;
+    avatar_url: string;
+  };
+  isSelected?: boolean;
 }
 
 export interface IGame {
@@ -18,4 +26,23 @@ export interface IGame {
   totalPlayers: number;
   isEnded: boolean;
   status: "waiting" | "racing" | "completed";
+}
+
+export interface IMezonClan {
+  id: string;
+  clan_id: string;
+  color: string;
+  slug: string;
+  title: string;
+}
+export interface IMezonUser {
+  id: string;
+  role_id: string[];
+  userChannelId: string;
+  user: {
+    display_name: string;
+    user_name: string;
+    avatar_url: string;
+  };
+  isSelected: boolean;
 }

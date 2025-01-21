@@ -1,5 +1,5 @@
 import { AppResponse } from "@/interface/app/AppResponse";
-import { IGame, IPlayer } from "@/interface/game/Game";
+import { IGame, IMezonClan, IMezonUser, IPlayer } from "@/interface/game/Game";
 import { useSocket } from "@/providers/SocketProvider";
 import useGameStore from "@/stores/gameStore";
 import { useEffect, useRef, useState } from "react";
@@ -12,6 +12,7 @@ import CountdownTime from "./components/CountdownTime";
 import useUserStore from "@/stores/userStore";
 import ModalShowResult from "./ModalShowResult";
 import ModalSetup from "./ModalSetup";
+import { MezonAppEvent, MezonWebViewEvent } from "@/types/webview";
 
 const GamePage = () => {
   const socket = useSocket();
@@ -25,6 +26,9 @@ const GamePage = () => {
   const setIsResetGame = useGameStore((state) => state.setIsResetGame);
   const setGameStatus = useGameStore((state) => state.setGameStatus);
   const setIsCompletedAll = useGameStore((state) => state.setIsCompletedAll);
+  const setMezonClanRoles = useGameStore((state) => state.setMezonClanRoles);
+  const setSelectedClanRole = useGameStore((state) => state.setSelectedClanRole);
+  const setMezonClanUsers = useGameStore((state) => state.setMezonClanUsers);
   const currentGame = useGameStore((state) => state.currentGame);
   const currentUser = useUserStore((state) => state.currentUser);
   const isRacing = useGameStore((state) => state.isRacing);
@@ -132,6 +136,20 @@ const GamePage = () => {
     };
   }, [setListPlayer, setTotalPlayer, socket, gameId, setCurrentGame, navigate]);
 
+  useEffect(() => {
+    window.Mezon.WebView?.postEvent("GET_CLAN_USERS" as MezonWebViewEvent, {}, () => {});
+    window.Mezon.WebView?.onEvent("CLAN_USERS_RESPONSE" as MezonAppEvent, (_, data) => {
+      setMezonClanUsers(data as IMezonUser[]);
+    });
+    window.Mezon.WebView?.postEvent("GET_CLAN_ROLES" as MezonWebViewEvent, {}, () => {});
+    window.Mezon.WebView?.onEvent("CLAN_ROLES_RESPONSE" as MezonAppEvent, (_, data) => {
+      setMezonClanRoles(data as IMezonClan[]);
+      if ((data as IMezonClan[]).length > 0) {
+        setSelectedClanRole((data as IMezonClan[])[0].id);
+      }
+    });
+  }, [setMezonClanRoles, setMezonClanUsers, setSelectedClanRole]);
+
   const countdownRef = useRef<{ startCountdown: () => void; resetCountdown: () => void }>(null);
 
   const handleStartGame = () => {
@@ -209,7 +227,7 @@ const GamePage = () => {
                     <div className="bg-[url('/Icons/StarIcon.png')] flex items-center justify-center bg-center bg-no-repeat bg-cover w-[35px] h-[35px]">
                       {index + 1}
                     </div>
-                    <span>{player.name}</span>
+                    <span>{player.name ?? player.user?.display_name}</span>
                   </div>
                 ))}
             </div>

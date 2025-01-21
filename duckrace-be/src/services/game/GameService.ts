@@ -6,6 +6,7 @@ import { IAddPlayerSubmitDTO } from "@/models/games/IAddPlayerSubmitDTO";
 import { IRemovePlayerSubmitDTO } from "@/models/games/IRemovePlayerSubmitDTO";
 import { IStartGameSubmitDTO } from "@/models/games/IStartGameSubmitDTO";
 import { IChangeTimeSubmitDTO } from "@/models/games/IChangeTimeSubmitDTO";
+import { IUpdateListPlayerDTO } from "@/models/games/IUpdateListPlayerDTO";
 
 class GameService implements IGameService {
   private static instance: GameService;
@@ -181,6 +182,37 @@ class GameService implements IGameService {
         statusCode: 200,
         isSuccess: true,
         data: game,
+      };
+    } catch (error) {
+      logger.error(error?.message);
+      return {
+        statusCode: 500,
+        isSuccess: false,
+        errorMessage: "Lỗi từ hệ thống",
+      };
+    }
+  }
+
+  public async updateUserOfGame(updateUserData: IUpdateListPlayerDTO): Promise<ServiceResponse> {
+    try {
+      const currentGame = this.listGame.find((game) => game.id === updateUserData.gameId);
+      if (!currentGame) {
+        return {
+          statusCode: 404,
+          isSuccess: false,
+          errorMessage: "Không tìm thấy game",
+        };
+      }
+      updateUserData.players.forEach((player, index) => {
+        player.score = { oldScore: 0, newScore: 0, totalScore: 0 };
+        player.order = index + 1;
+      });
+      currentGame.players = updateUserData.players;
+      currentGame.totalPlayers = updateUserData.players.length;
+      return {
+        statusCode: 200,
+        isSuccess: true,
+        data: currentGame,
       };
     } catch (error) {
       logger.error(error?.message);

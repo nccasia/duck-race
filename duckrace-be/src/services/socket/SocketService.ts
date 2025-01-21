@@ -11,6 +11,7 @@ import { IAddPlayerSubmitDTO } from "@/models/games/IAddPlayerSubmitDTO";
 import { IRemovePlayerSubmitDTO } from "@/models/games/IRemovePlayerSubmitDTO";
 import { IStartGameSubmitDTO } from "@/models/games/IStartGameSubmitDTO";
 import { IChangeTimeSubmitDTO } from "@/models/games/IChangeTimeSubmitDTO";
+import { IUpdateListPlayerDTO } from "@/models/games/IUpdateListPlayerDTO";
 
 class SocketService implements ISocketService {
   private socketServer: Server;
@@ -35,6 +36,7 @@ class SocketService implements ISocketService {
     socket.on(SocketEvents.ON.CREATE_GAME, (ownerId: string) => this.onCreateGame(socket, ownerId));
     socket.on(SocketEvents.ON.GET_GAME, (gameId: string) => this.onGetGame(socket, gameId));
     socket.on(SocketEvents.ON.ADD_USER_TO_GAME, (data: IAddPlayerSubmitDTO) => this.onAddUserToGame(socket, data));
+    socket.on(SocketEvents.ON.UPDATE_USER_OF_GAME, (data: IUpdateListPlayerDTO) => this.onUpdateUserOfGame(socket, data));
     socket.on(SocketEvents.ON.REMOVE_USER_FROM_GAME, (data: IRemovePlayerSubmitDTO) => this.onRemoveUserFromGame(socket, data));
     socket.on(SocketEvents.ON.RESET_GAME, (data: IStartGameSubmitDTO) => this.onResetGame(socket, data));
     socket.on(SocketEvents.ON.CHANGE_TIME, (data: IChangeTimeSubmitDTO) => this.onChangeTime(socket, data));
@@ -96,6 +98,17 @@ class SocketService implements ISocketService {
     } else {
       console.log(`User ${socket.id} add to game failed: ${addPlayerResponse.errorMessage}`);
       socket.emit(SocketEvents.EMIT.ADD_USER_TO_GAME_FAILED, addPlayerResponse);
+    }
+  };
+
+  onUpdateUserOfGame = async (socket: Socket, data: IUpdateListPlayerDTO) => {
+    const updatePlayerResponse = await this._gameService.updateUserOfGame(data);
+    if (updatePlayerResponse.isSuccess) {
+      console.log(`User ${socket.id} updated in game`);
+      socket.emit(SocketEvents.EMIT.UPDATE_USER_OF_GAME_SUCCESS, updatePlayerResponse);
+    } else {
+      console.log(`User ${socket.id} update in game failed: ${updatePlayerResponse.errorMessage}`);
+      socket.emit(SocketEvents.EMIT.UPDATE_USER_OF_GAME_FAILED, updatePlayerResponse);
     }
   };
 

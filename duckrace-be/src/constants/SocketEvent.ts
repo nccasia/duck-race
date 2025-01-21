@@ -14,6 +14,7 @@ export const SocketEvents = {
     OUT_GAME: "outGame",
     RESET_GAME: "resetGame",
     CHANGE_TIME: "changeTime",
+    UPDATE_USER_OF_GAME: "updateUserOfGame",
   },
   EMIT: {
     USER_CONNECTED: "userConnected",
@@ -41,5 +42,7 @@ export const SocketEvents = {
     RESET_GAME_FAILED: "resetGameFailed",
     CHANGE_TIME_SUCCESS: "changeTimeSuccess",
     CHANGE_TIME_FAILED: "changeTimeFailed",
+    UPDATE_USER_OF_GAME_SUCCESS: "updateUserOfGameSuccess",
+    UPDATE_USER_OF_GAME_FAILED: "updateUserOfGameFailed",
   },
 };

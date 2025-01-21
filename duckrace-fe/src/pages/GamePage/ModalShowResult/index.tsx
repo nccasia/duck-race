@@ -16,6 +16,7 @@ const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
     setListPlayerAfterSort(listPlayerNew);
   }, [listPlayer]);
 
+  console.log("listPlayerAfterSort", listPlayerAfterSort);
   useEffect(() => {
     if (isCompletedAll) {
       setOpenModalShowResult(true);
@@ -47,7 +48,7 @@ const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
                 <div className="bg-[url('/Icons/StarIcon.png')] flex items-center justify-center bg-center bg-no-repeat bg-cover w-[45px] h-[45px]">
                   {player.order}
                 </div>
-                <span>{player.name}</span>
+                <span>{player.name ?? player.user?.display_name}</span>
               </div>
             ))}
           </div>

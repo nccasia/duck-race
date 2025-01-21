@@ -9,6 +9,14 @@ class Player {
   public name: string;
   public score: Score;
   public order: number;
+  role_id?: string[];
+  userChannelId?: string;
+  user?: {
+    display_name: string;
+    user_name: string;
+    avatar_url: string;
+  };
+  isSelected?: boolean;
 }
 
 class Game {
