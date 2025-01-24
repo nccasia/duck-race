@@ -1,21 +1,29 @@
-export interface IScore {
-  oldScore: number;
-  newScore: number;
-  totalScore: number;
-}
-
-export interface IPlayer {
-  id: string;
-  name: string;
-  score: IScore;
-  order: number;
-}
+import { IDuck } from "../room/Room";
+import { User } from "../user/User";
 
 export interface IGame {
   id: string;
-  expiredTime: number;
-  players: IPlayer[];
-  totalPlayers: number;
-  isEnded: boolean;
-  status: "waiting" | "racing" | "completed";
+}
+export interface BettorDetail {
+  userId: string;
+  duckId: string;
+  betAmount: number;
+  user: User;
+}
+export interface BettorOfDucks extends IDuck {
+  bettors: BettorDetail[];
+}
+
+export interface DuckPicked {
+  duckId: string;
+  duckName: string;
+  duckOrder: number;
+}
+
+export interface IGameResult {
+  roomId: string;
+  winners: string[];
+  gameId: string;
+  totalBet: number;
+  winBet: number;
 }

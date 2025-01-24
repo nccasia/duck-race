@@ -1,24 +1,31 @@
-class Score {
-  public oldScore: number;
-  public newScore: number;
-  public totalScore: number;
-}
+import { Duck } from "./Room";
 
-class Player {
-  public id: string;
-  public name: string;
-  public score: Score;
-  public order: number;
+class GameBettor {
+  public userId: string;
+  public duckId: string;
+  public betAmount: number;
+  public isConfirmed: boolean;
 }
 
 class Game {
   public id: string;
   public ownerId?: string;
-  public expiredTime: number;
-  public currentTime: number;
-  public players: Player[];
-  public totalPlayers: number;
-  public status: "waiting" | "racing" | "completed";
+  public roomId: string;
+  public gameStatus: "waiting" | "betting" | "confirming" | "racing" | "completed";
+  public winners: string[];
+  public bettors: string[];
+  public totalBet: number;
+  public gameBettors: GameBettor[];
 }
 
-export { Game, Player, Score };
+class BettorDetail {
+  public userId: string;
+  public duckId: string;
+  public betAmount: number;
+  public user: User;
+}
+class BettorOfDucks extends Duck {
+  public bettors: BettorDetail[];
+}
+
+export { Game, GameBettor, BettorDetail, BettorOfDucks };
