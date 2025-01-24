@@ -21,7 +21,6 @@ const CountdownTime = forwardRef(({ initTime = 0 }: ICountdownTimeProps, ref) =>
   }));
 
   useEffect(() => {
-    console.log("CountdownTime -> initTime", initTime);
     setTimeCountDown(initTime);
   }, [initTime]);
 
@@ -43,7 +42,6 @@ const CountdownTime = forwardRef(({ initTime = 0 }: ICountdownTimeProps, ref) =>
     };
   }, [isActive, timeCountDown]);
 
-  console.log("CountdownTime -> timeCountDown", timeCountDown);
   return (
     <div className='flex justify-center items-center gap-1 text-[30px] font-titan text-white absolute top-1 left-1/2 transform -translate-x-1/2 '>
       <span className='flex justify-center items-center w-[50px]'>

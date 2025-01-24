@@ -1,24 +1,24 @@
 import { SocketEvents } from "@/constants/SocketEvents";
 import { useSocket } from "@/providers/SocketProvider";
-import useGameStore from "@/stores/gameStore";
+import useRoomStore from "@/stores/roomStore";
 
 interface IListUserTabProps {
   handleChangeTab: (tab: string) => void;
 }
 const ListUserTab = ({ handleChangeTab }: IListUserTabProps) => {
-  const { listPlayer, currentGame } = useGameStore();
+  const { listDucks, currentRoom } = useRoomStore();
   const socket = useSocket();
   const handleRemoveUser = (id: string) => {
     if (!socket) return;
     socket.emit(SocketEvents.EMIT.REMOVE_USER_FROM_GAME, {
-      gameId: currentGame?.id,
-      players: [id],
+      roomId: currentRoom?.roomId,
+      ducks: [id],
     });
   };
   return (
     <div className='select-none w-full h-full outline-none'>
-      {listPlayer?.length > 0 ? (
-        listPlayer?.map((player, index) => (
+      {listDucks?.length > 0 ? (
+        listDucks?.map((player, index) => (
           <div
             key={player.id}
             className='flex items-center justify-between h-[50px] border-b border-gray-500 text-gray-800 font-titan'

@@ -3,26 +3,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useGameStore from "@/stores/gameStore";
 import AddUserTab from "./AddUserTab";
 import ListUserTab from "./ListUserTab";
-import { useEffect, useState } from "react";
 import { useSocket } from "@/providers/SocketProvider";
 import { SocketEvents } from "@/constants/SocketEvents";
-import { AppResponse } from "@/interface/app/AppResponse";
-import { IGame } from "@/interface/game/Game";
 import MezonUserTab from "./MezonUserTab";
+import useRoomStore from "@/stores/roomStore";
 
 const ModalUser = () => {
-  const {
-    openModalShowUser,
-    setOpenModalShowUser,
-    setCurrentGame,
-    setListPlayer,
-    setTotalPlayers,
-    setAddUserText,
-    gameStatus,
-    currentGame,
-    listMezonUser,
-  } = useGameStore();
-  const [tabs, setTabs] = useState<string>("list-user");
+  const { gameStatus } = useGameStore();
+  const { listMezonUser, setOpenModalShowUser, openModalShowUser, currentRoom, tabs, setTabs } = useRoomStore();
   const socket = useSocket();
 
   const handleChangeTab = (tab: string) => {
@@ -39,54 +27,16 @@ const ModalUser = () => {
   const handleSaveListUser = () => {
     if (!socket) return;
     const listUser = listMezonUser.filter((user) => user.isSelected);
-    socket.emit(SocketEvents.EMIT.UPDATE_USER_OF_GAME, {
-      gameId: currentGame?.id,
-      players: listUser,
+    socket.emit(SocketEvents.EMIT.UPDATE_LIST_DUCK_OF_ROOM, {
+      roomId: currentRoom?.roomId,
+      ducks: listUser,
     });
   };
 
-  useEffect(() => {
-    if (!socket) return;
-    socket.on(SocketEvents.ON.ADD_USER_TO_GAME_FAILED, (data: AppResponse<null>) => {
-      console.log(data.errorMessage);
-    });
-    socket.on(SocketEvents.ON.ADD_USER_TO_GAME_SUCCESS, (data: AppResponse<IGame>) => {
-      setCurrentGame(data.data as IGame);
-      setListPlayer(data.data?.players || []);
-      setTotalPlayers(data.data?.totalPlayers || 0);
-      setAddUserText("");
-      setTabs("list-user");
-    });
-    socket.on(SocketEvents.ON.REMOVE_USER_FROM_GAME_SUCCESS, (data: AppResponse<IGame>) => {
-      setCurrentGame(data.data as IGame);
-      setListPlayer(data.data?.players || []);
-      setTotalPlayers(data.data?.totalPlayers || 0);
-    });
-    socket.on(SocketEvents.ON.REMOVE_USER_FROM_GAME_FAILED, (data: AppResponse<null>) => {
-      console.log(data.errorMessage);
-    });
-    socket.on(SocketEvents.ON.UPDATE_USER_OF_GAME_SUCCESS, (data: AppResponse<IGame>) => {
-      setCurrentGame(data.data as IGame);
-      setListPlayer(data.data?.players || []);
-      setTotalPlayers(data.data?.totalPlayers || 0);
-      setTabs("list-user");
-    });
-    socket.on(SocketEvents.ON.UPDATE_USER_OF_GAME_FAILED, (data: AppResponse<null>) => {
-      console.log(data.errorMessage);
-    });
-    return () => {
-      socket.off(SocketEvents.ON.ADD_USER_TO_GAME_FAILED);
-      socket.off(SocketEvents.ON.ADD_USER_TO_GAME_SUCCESS);
-      socket.off(SocketEvents.ON.REMOVE_USER_FROM_GAME_SUCCESS);
-      socket.off(SocketEvents.ON.REMOVE_USER_FROM_GAME_FAILED);
-      socket.off(SocketEvents.ON.UPDATE_USER_OF_GAME_SUCCESS);
-      socket.off(SocketEvents.ON.UPDATE_USER_OF_GAME_FAILED);
-    };
-  }, [setAddUserText, setCurrentGame, setListPlayer, setTotalPlayers, socket]);
   return (
     <Dialog open={openModalShowUser} onOpenChange={handleChangeOpenModalShowUser}>
       <DialogTrigger asChild>
-        <div className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-0 right-2 hover:scale-[0.98] transition-all active:scale-[1.0]'>
+        <div className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-[70px] right-[80px] hover:scale-[0.98] transition-all active:scale-[1.0]'>
           <img src='/Buttons/SmallButton.png' />
           <img className='w-[20px] absolute top-[10px] left-[20px]' src='/Icons/ProfileIcon.png' />
         </div>

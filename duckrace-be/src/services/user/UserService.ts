@@ -127,8 +127,40 @@ class UserService implements IUserService {
     }
   }
 
-  public async getSocketIdOfUser(userId: string): Promise<ServiceResponse> {
+  public async getSocketIdOfUserAsync(userId: string): Promise<ServiceResponse> {
     // Implementation here
+    try {
+      if (!userId) {
+        return {
+          statusCode: 400,
+          isSuccess: false,
+          errorMessage: "Không tìm thấy mã người dùng",
+        };
+      }
+      const user = this.listUsers.find((user) => user.id === userId);
+      if (!user) {
+        return {
+          statusCode: 404,
+          isSuccess: false,
+          errorMessage: "Không tìm thấy người dùng",
+        };
+      }
+      return {
+        statusCode: 200,
+        isSuccess: true,
+        data: user.socketId,
+      };
+    } catch (error) {
+      logger.error(error?.message);
+      return {
+        statusCode: 500,
+        isSuccess: false,
+        errorMessage: "Lỗi từ hệ thống",
+      };
+    }
+  }
+
+  public getSocketIdOfUser(userId: string): ServiceResponse {
     try {
       if (!userId) {
         return {

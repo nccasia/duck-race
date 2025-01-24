@@ -1,7 +1,7 @@
 import { Expose } from "class-transformer";
-export class IStartGameSubmitDTO {
-  @Expose()
-  public gameId: string;
+export class IConfirmBet {
   @Expose()
   public userId: string;
+  @Expose()
+  public gameId: string;
 }

@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { User } from "@/interface/user/User";
 import useUserStore from "@/stores/userStore";
+import { MezonAppEvent, MezonWebViewEvent } from "@/types/webview";
 import { useEffect, useMemo } from "react";
 
 interface GetUserProviderProps {
@@ -20,9 +22,27 @@ const GetUserProvider = ({ children }: GetUserProviderProps) => {
     return user;
   }, []);
   useEffect(() => {
-    const user = fetchCurrentUser;
-    if (user) setCurrentUser(user);
-  }, [fetchCurrentUser, setCurrentUser]);
+    window.Mezon.WebView?.postEvent("PING" as MezonWebViewEvent, { message: "PING" }, () => {
+      console.log("PING");
+    });
+    window.Mezon.WebView?.onEvent("CURRENT_USER_INFO" as MezonAppEvent, (_, userData: any) => {
+      if (!userData || !userData.user) {
+        return;
+      }
+      const user = {
+        id: userData.user?.id,
+        name: userData.user?.display_name,
+        username: userData.user?.username,
+        avatar: userData.user?.avatar_url,
+        email: userData?.email,
+        wallet: JSON.parse(userData.wallet).value,
+      };
+      console.log("user", user);
+      if (user) setCurrentUser(user);
+    });
+    // const user = fetchCurrentUser;
+    // if (user) setCurrentUser(user);
+  }, [setCurrentUser]);
   return <div>{children}</div>;
 };
 export default GetUserProvider;

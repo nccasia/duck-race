@@ -1,48 +1,29 @@
-export interface IScore {
-  oldScore: number;
-  newScore: number;
-  totalScore: number;
-}
-
-export interface IPlayer {
-  id: string;
-  name: string;
-  score: IScore;
-  order: number;
-  role_id?: string[];
-  userChannelId?: string;
-  user?: {
-    display_name: string;
-    user_name: string;
-    avatar_url: string;
-  };
-  isSelected?: boolean;
-}
+import { IDuck } from "../room/Room";
+import { User } from "../user/User";
 
 export interface IGame {
   id: string;
-  expiredTime: number;
-  players: IPlayer[];
-  totalPlayers: number;
-  isEnded: boolean;
-  status: "waiting" | "racing" | "completed";
+}
+export interface BettorDetail {
+  userId: string;
+  duckId: string;
+  betAmount: number;
+  user: User;
+}
+export interface BettorOfDucks extends IDuck {
+  bettors: BettorDetail[];
 }
 
-export interface IMezonClan {
-  id: string;
-  clan_id: string;
-  color: string;
-  slug: string;
-  title: string;
+export interface DuckPicked {
+  duckId: string;
+  duckName: string;
+  duckOrder: number;
 }
-export interface IMezonUser {
-  id: string;
-  role_id: string[];
-  userChannelId: string;
-  user: {
-    display_name: string;
-    user_name: string;
-    avatar_url: string;
-  };
-  isSelected: boolean;
+
+export interface IGameResult {
+  roomId: string;
+  winners: string[];
+  gameId: string;
+  totalBet: number;
+  winBet: number;
 }

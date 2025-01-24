@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 import { SocketEvents } from "@/constants/SocketEvents";
 import { useSocket } from "@/providers/SocketProvider";
 import useGameStore from "@/stores/gameStore";
+import useRoomStore from "@/stores/roomStore";
 import { useEffect, useState } from "react";
 import { useRef } from "react";
 
@@ -14,7 +15,8 @@ interface TimeInput {
 
 const ModalSetup = () => {
   const [openModalSetup, setOpenModalSetup] = useState(false);
-  const { currentGame, gameStatus } = useGameStore();
+  const { gameStatus } = useGameStore();
+  const { currentRoom } = useRoomStore();
   const socket = useSocket();
 
   const [timeInput, setTimeInput] = useState<TimeInput>({
@@ -28,8 +30,8 @@ const ModalSetup = () => {
   const inputRefs = useRef<HTMLInputElement[]>([]);
 
   useEffect(() => {
-    if (currentGame) {
-      const time = currentGame.expiredTime; // Ví dụ: 300s
+    if (currentRoom) {
+      const time = currentRoom.expiredTime; // Ví dụ: 300s
       const minutes = Math.floor(time / 60); // 5 phút
       const seconds = time % 60; // 0 giây
 
@@ -44,7 +46,7 @@ const ModalSetup = () => {
         position4: parseInt(formattedTime[3]), // 0
       });
     }
-  }, [currentGame]);
+  }, [currentRoom]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, position: number) => {
     const value = e.key;
@@ -74,7 +76,7 @@ const ModalSetup = () => {
     const time = convertTimeInputToSeconds(timeInput);
     if (!socket) return;
     socket.emit(SocketEvents.EMIT.CHANGE_TIME, {
-      gameId: currentGame?.id,
+      roomId: currentRoom?.roomId,
       expiredTime: time,
     });
     setOpenModalSetup(false);
@@ -92,10 +94,10 @@ const ModalSetup = () => {
       <DialogTrigger asChild>
         <div
           onClick={() => handleOpenModalSetup(true)}
-          className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-0 right-[150px] hover:scale-[0.98] transition-all active:scale-[1.0]'
+          className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-[70px] right-2 hover:scale-[0.98] transition-all active:scale-[1.0]'
         >
           <img src='/Buttons/SmallButton.png' />
-          <img className='w-[25px] absolute top-[15px] left-[18px]' src='/Icons/SettingsIcon.png' />
+          <img className='w-[30px] absolute top-[10px] left-[15px]' src='/Icons/TimeIcon.png' />
         </div>
       </DialogTrigger>
       <DialogContent aria-describedby='modal-description' aria-labelledby='modal-title' role='dialog'>

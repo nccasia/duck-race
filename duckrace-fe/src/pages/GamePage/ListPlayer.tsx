@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react";
 import useGameStore from "@/stores/gameStore"; // Giả sử bạn có store để quản lý state
 import { useSocket } from "@/providers/SocketProvider";
+import useRoomStore from "@/stores/roomStore";
+import { SocketEvents } from "@/constants/SocketEvents";
+import { IGameResult } from "@/interface/game/Game";
 
 const ListPlayer = () => {
   const socket = useSocket();
@@ -14,7 +17,7 @@ const ListPlayer = () => {
   const background2Position = useRef<number>(0); // Lưu vị trí của background 2
   const endGameLinePosition = useRef<number | null>(null); // Lưu vị trí của background 2
   const startGameLinePosition = useRef<number | null>(null); // Lưu vị trí của background 2
-  const players = useGameStore((state) => state.listPlayer); // Lấy danh sách player từ store
+  const players = useRoomStore((state) => state.listDucks); // Lấy danh sách player từ store
   const isResetGame = useGameStore((state) => state.isResetGame); // Lấy trạng thái reset vị trí từ store
   const setIsCompletedAll = useGameStore((state) => state.setIsCompletedAll); // Lấy danh sách player từ store
   const setGameStatus = useGameStore((state) => state.setGameStatus); // Lấy danh sách player từ store
@@ -24,7 +27,7 @@ const ListPlayer = () => {
   const resetGameRef = useRef<boolean>(false); // Lưu trạng thái reset game
   const gameStatus = useGameStore((state) => state.gameStatus); // Lấy trạng thái game từ store
 
-  const { isRacing } = useGameStore(); // Lấy trạng thái đua của game từ store
+  const { isRacing, setGameResult } = useGameStore(); // Lấy trạng thái đua của game từ store
 
   // Dùng ref để lưu vị trí của các vịt
   const duckPositionsRef = useRef<Map<number, { x: number; y: number; v: number; isReset: boolean; duckIcon: number }>>(
@@ -34,10 +37,15 @@ const ListPlayer = () => {
 
   useEffect(() => {
     if (!socket) return;
-    socket.on("endGame", () => {
+    socket.on(SocketEvents.ON.END_GAME_SUCCESS, (data: IGameResult) => {
       isEndGameRef.current = true;
       setGameStatus("completed");
+      setGameResult(data);
+      console.log("end game", data);
     });
+    return () => {
+      socket.off(SocketEvents.ON.END_GAME_SUCCESS);
+    };
   }, [setGameStatus, socket]);
 
   useEffect(() => {
@@ -74,14 +82,12 @@ const ListPlayer = () => {
   // Cập nhật vị trí và tốc độ của vịt mỗi khi players thay đổi
   useEffect(() => {
     players.forEach((player, index) => {
-      const randomNumber = Math.floor(Math.random() * 10) + 1;
-
       const duckPosition = duckPositionsRef.current.get(index) || {
         x: 0,
         y: index,
         v: 0, // Khởi tạo tốc độ là 0 khi không có sự thay đổi\
         isReset: false,
-        duckIcon: randomNumber,
+        duckIcon: player.colorNumber,
       };
 
       // Tính toán tốc độ dựa trên sự thay đổi của điểm số (newScore - oldScore)
@@ -135,8 +141,6 @@ const ListPlayer = () => {
     if (context) {
       context.scale(ratio, ratio);
     }
-    console.log("height", window.innerHeight);
-    console.log("canvas height", canvas?.height);
     let lastTime = 0; // Lưu lại thời gian của lần vẽ trước
 
     const animateDucks = (timestamp: number) => {

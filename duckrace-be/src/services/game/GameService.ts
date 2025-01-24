@@ -1,17 +1,24 @@
 import { IGameService } from "@/interfaces/IGameService";
 import logger from "@/helpers/logger";
 import { generateId } from "@/utils/generateId";
-import { Game, Player } from "@/entities/Game";
-import { IAddPlayerSubmitDTO } from "@/models/games/IAddPlayerSubmitDTO";
-import { IRemovePlayerSubmitDTO } from "@/models/games/IRemovePlayerSubmitDTO";
-import { IStartGameSubmitDTO } from "@/models/games/IStartGameSubmitDTO";
-import { IChangeTimeSubmitDTO } from "@/models/games/IChangeTimeSubmitDTO";
-import { IUpdateListPlayerDTO } from "@/models/games/IUpdateListPlayerDTO";
+import { BettorOfDucks, Game } from "@/entities/Game";
+import { ICreateGameSubmitDTO } from "@/models/games/ICreateGameSubmitDTO";
+import { IBetForDuckDTO } from "@/models/games/IBetForDuckDTO";
+import { IRoomService } from "@/interfaces/IRoomService";
+import RoomService from "../room/RoomService";
+import { IUserService } from "@/interfaces/IUserService";
+import UserService from "../user/UserService";
+import { IConfirmBet } from "@/models/games/IConfirmBet";
 
 class GameService implements IGameService {
   private static instance: GameService;
   private listGame: Game[] = [];
-  private constructor() {}
+  private _roomService: IRoomService;
+  private _userService: IUserService;
+  private constructor() {
+    this._roomService = RoomService.getInstance();
+    this._userService = UserService.getInstance();
+  }
 
   public static getInstance(): GameService {
     if (!GameService.instance) {
@@ -20,56 +27,29 @@ class GameService implements IGameService {
     return GameService.instance;
   }
 
-  private randomUserArray(players: Player[]): Player[] {
-    // Implementation here
-    const randomUserArray = [...players].sort(() => Math.random() - 0.5);
-    return randomUserArray;
-  }
-
-  public checkGameCompleted(gameId: string): boolean {
-    const currentGame = this.listGame.find((game) => game.id === gameId);
-    if (!currentGame) return true;
-    // Implementation here
-    if (currentGame.currentTime >= currentGame.expiredTime) {
-      currentGame.status = "completed";
-      return true;
-    }
-    return false;
-  }
-
-  private updateScoreOfPlayer(gameId: string, playerId: string, score: number): void {
-    // Implementation here
-    const currentGame = this.listGame.find((game) => game.id === gameId);
-    const player = currentGame?.players.find((player) => player.id === playerId);
-    if (player) {
-      player.score.oldScore = player.score.totalScore;
-      player.score.totalScore += score;
-      player.score.newScore = player.score.totalScore;
-    }
-  }
-
-  private updateCurrentTimeOfGame(gameId: string, currentTime?: number): void {
-    const currentGame = this.listGame.find((game) => game.id === gameId);
-    if (!currentGame) return;
-    if (currentTime) {
-      currentGame.currentTime = currentTime;
-    } else {
-      currentGame.currentTime++;
-    }
-  }
-
-  public async createNewGame(ownerId: string): Promise<ServiceResponse> {
+  public async createNewGame(gameData: ICreateGameSubmitDTO): Promise<ServiceResponse> {
     try {
-      const roomId = generateId(10, "mixed");
+      const roomResponse = await this._roomService.getRoomById(gameData.roomId);
+      if (!roomResponse.isSuccess) {
+        return {
+          statusCode: 404,
+          isSuccess: false,
+          errorMessage: "Không tìm thấy phòng",
+        };
+      }
+
+      const gameId = generateId(10, "mixed");
       const game = new Game();
-      game.id = roomId;
-      game.ownerId = ownerId;
-      game.currentTime = 0;
-      game.expiredTime = 60;
-      game.players = [];
-      game.totalPlayers = 0;
-      game.status = "waiting";
+      game.id = gameId;
+      game.ownerId = gameData.userId;
+      game.roomId = gameData.roomId;
+      game.gameStatus = "waiting";
+      game.gameBettors = [];
+      game.totalBet = 0;
+      game.winners = [];
+      game.bettors = [];
       this.listGame.push(game);
+      roomResponse.data.currentGame = gameId;
       return {
         statusCode: 201,
         isSuccess: true,
@@ -111,207 +91,77 @@ class GameService implements IGameService {
     }
   }
 
-  public async removeGame(gameId: string): Promise<ServiceResponse> {
+  public async betForDuck(betData: IBetForDuckDTO): Promise<ServiceResponse> {
     try {
-      this.listGame = this.listGame.filter((game) => game.id !== gameId);
-      return {
-        statusCode: 200,
-        isSuccess: true,
-        data: null,
-      };
-    } catch (error) {
-      logger.error(error?.message);
-      return {
-        statusCode: 500,
-        isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
-      };
-    }
-  }
-
-  public async changeTimeOfGame(changeTimeData: IChangeTimeSubmitDTO): Promise<ServiceResponse> {
-    try {
-      const currentGame = this.listGame.find((game) => game.id === changeTimeData.gameId);
-      if (!currentGame) {
-        return {
-          statusCode: 404,
-          isSuccess: false,
-          errorMessage: "Không tìm thấy game",
-        };
-      }
-      console.log("changeTimeData", changeTimeData);
-      currentGame.expiredTime = changeTimeData.expiredTime;
-      return {
-        statusCode: 200,
-        isSuccess: true,
-        data: currentGame,
-      };
-    } catch (error) {
-      logger.error(error?.message);
-      return {
-        statusCode: 500,
-        isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
-      };
-    }
-  }
-
-  public async addPlayerToGame(addPlayerData: IAddPlayerSubmitDTO): Promise<ServiceResponse> {
-    try {
-      const game = this.listGame.find((game) => game.id === addPlayerData.gameId);
-      if (!game) {
-        return {
-          statusCode: 404,
-          isSuccess: false,
-          errorMessage: "Không tìm thấy game",
-        };
-      }
-      const playerNumber = game.players.length;
-      addPlayerData.players.forEach((player, index) => {
-        if (player?.trim() !== "") {
-          game.players.push({
-            id: generateId(10, "mixed"),
-            name: player?.trim(),
-            score: { oldScore: 0, newScore: 0, totalScore: 0 },
-            order: playerNumber + index + 1,
-          });
-        }
-      });
-      game.totalPlayers = game.players.length;
-      return {
-        statusCode: 200,
-        isSuccess: true,
-        data: game,
-      };
-    } catch (error) {
-      logger.error(error?.message);
-      return {
-        statusCode: 500,
-        isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
-      };
-    }
-  }
-
-  public async updateUserOfGame(updateUserData: IUpdateListPlayerDTO): Promise<ServiceResponse> {
-    try {
-      const currentGame = this.listGame.find((game) => game.id === updateUserData.gameId);
-      if (!currentGame) {
-        return {
-          statusCode: 404,
-          isSuccess: false,
-          errorMessage: "Không tìm thấy game",
-        };
-      }
-      updateUserData.players.forEach((player, index) => {
-        player.score = { oldScore: 0, newScore: 0, totalScore: 0 };
-        player.order = index + 1;
-      });
-      currentGame.players = updateUserData.players;
-      currentGame.totalPlayers = updateUserData.players.length;
-      return {
-        statusCode: 200,
-        isSuccess: true,
-        data: currentGame,
-      };
-    } catch (error) {
-      logger.error(error?.message);
-      return {
-        statusCode: 500,
-        isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
-      };
-    }
-  }
-
-  public async removePlayerFromGame(removeUserData: IRemovePlayerSubmitDTO): Promise<ServiceResponse> {
-    try {
-      console.log("data", removeUserData);
-      const game = this.listGame.find((game) => game.id === removeUserData.gameId);
-      if (!game) {
-        return {
-          statusCode: 404,
-          isSuccess: false,
-          errorMessage: "Không tìm thấy game",
-        };
-      }
-      game.players = game.players.filter((player) => !removeUserData.players.includes(player.id));
-      game.totalPlayers = game.players.length;
-      game.players.forEach((player, index) => {
-        player.order = index + 1;
-      });
-      return {
-        statusCode: 200,
-        isSuccess: true,
-        data: game,
-      };
-    } catch (error) {
-      logger.error(error?.message);
-      return {
-        statusCode: 500,
-        isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
-      };
-    }
-  }
-
-  public async resetGame(resetGameData: IStartGameSubmitDTO): Promise<ServiceResponse> {
-    try {
-      const currentGame = this.listGame.find((game) => game.id === resetGameData.gameId);
-      if (!currentGame) {
-        return {
-          statusCode: 404,
-          isSuccess: false,
-          errorMessage: "Không tìm thấy game",
-        };
-      }
-      currentGame.players.forEach((player) => {
-        player.score = { oldScore: 0, newScore: 0, totalScore: 0 };
-      });
-      currentGame.currentTime = 0;
-      currentGame.status = "waiting";
-      return {
-        statusCode: 200,
-        isSuccess: true,
-        data: currentGame,
-      };
-    } catch (error) {
-      logger.error(error?.message);
-      return {
-        statusCode: 500,
-        isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
-      };
-    }
-  }
-
-  public async startNewGame(startGameData: IStartGameSubmitDTO): Promise<ServiceResponse> {
-    try {
-      const currentGame = this.listGame.find((game) => game.id === startGameData.gameId);
-      if (!currentGame) {
-        return {
-          statusCode: 404,
-          isSuccess: false,
-          errorMessage: "Không tìm thấy game",
-        };
-      }
-      if (currentGame.players.length < 2) {
+      console.log("betData", betData);
+      if (!betData.gameId || !betData.userId || !betData.ducks) {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Phải có ít nhất 2 người để chơi",
+          errorMessage: "Dữ liệu không hợp lệ",
         };
       }
-      const resetGameResponse = await this.resetGame(startGameData);
-      if (!resetGameResponse.isSuccess) {
-        return resetGameResponse;
+      const game = this.listGame.find((game) => game.id === betData.gameId);
+      if (!game) {
+        return {
+          statusCode: 404,
+          isSuccess: false,
+          errorMessage: "Không tìm thấy game",
+        };
       }
-      currentGame.status = "racing";
+      betData.ducks.forEach((duckId) => {
+        const checkBet = game.gameBettors.find((bettor) => bettor.userId === betData.userId && bettor.duckId === duckId);
+        if (!checkBet) {
+          game.gameBettors.push({
+            userId: betData.userId,
+            duckId: duckId,
+            betAmount: betData.betAmount,
+            isConfirmed: false,
+          });
+          game.totalBet += betData.betAmount;
+        }
+      });
+
+      if (!game.bettors.includes(betData.userId)) {
+        game.bettors.push(betData.userId);
+      }
       return {
-        statusCode: 201,
+        statusCode: 200,
         isSuccess: true,
-        data: resetGameResponse.data,
+        data: game,
       };
+    } catch (error) {
+      logger.error(error?.message);
+      return {
+        statusCode: 500,
+        isSuccess: false,
+        errorMessage: "Lỗi từ hệ thống" + error?.message,
+      };
+    }
+  }
+
+  public async confirmBetForDuck(confirmBetData: IConfirmBet): Promise<ServiceResponse> {
+    try {
+      if (!confirmBetData.gameId || !confirmBetData.userId) {
+        return {
+          statusCode: 400,
+          isSuccess: false,
+          errorMessage: "Dữ liệu không hợp lệ",
+        };
+      }
+      const game = this.listGame.find((game) => game.id === confirmBetData.gameId);
+      if (!game) {
+        return {
+          statusCode: 404,
+          isSuccess: false,
+          errorMessage: "Không tìm thấy game",
+        };
+      }
+      game.gameBettors.forEach((bettor) => {
+        if (bettor.userId === confirmBetData.userId) {
+          bettor.isConfirmed = true;
+        }
+      });
     } catch (error) {
       logger.error(error?.message);
       return {
@@ -322,44 +172,152 @@ class GameService implements IGameService {
     }
   }
 
-  public async startTurn(gameId: string): Promise<ServiceResponse> {
+  public async getGameBettors(gameId: string): Promise<ServiceResponse> {
     try {
-      const currentGame = this.listGame.find((game) => game.id === gameId);
-      if (!currentGame) {
+      if (!gameId) {
+        return {
+          statusCode: 400,
+          isSuccess: false,
+          errorMessage: "Dữ liệu không hợp lệ",
+        };
+      }
+      const game = this.listGame.find((game) => game.id === gameId);
+      if (!game) {
         return {
           statusCode: 404,
           isSuccess: false,
           errorMessage: "Không tìm thấy game",
         };
       }
-
-      const players = currentGame.players;
-      const randomUserArray = this.randomUserArray(players);
-      const startScore = 1;
-      const endScore = 6;
-      let score = startScore;
-      randomUserArray?.forEach((player, index) => {
-        let turnScore = score + (index % 6);
-        if (turnScore > endScore) {
-          turnScore = startScore;
-          score = startScore;
-        }
-        this.updateScoreOfPlayer(currentGame.id, player.id, turnScore);
+      const listUser = this._userService.getListUsers();
+      const ducksResponse = await this._roomService.getDucksOfRoom(game.roomId);
+      const listDucks = ducksResponse.data;
+      const gameBettors: BettorOfDucks[] = listDucks?.map((duck) => {
+        const bettorsOfThisDuck = game.gameBettors?.filter((bettor) => bettor.duckId === duck.id);
+        const bettors = bettorsOfThisDuck?.map((bettor) => {
+          const user = listUser.find((user) => user.id === bettor.userId);
+          return {
+            ...bettor,
+            user,
+          };
+        });
+        return {
+          ...duck,
+          bettors,
+        };
       });
-      this.updateCurrentTimeOfGame(currentGame.id);
-      const gameAfterTurn = this.listGame.find((game) => game.id === gameId);
       return {
         statusCode: 200,
         isSuccess: true,
-        data: gameAfterTurn,
-        message: "COMPLETED-GAME",
+        data: gameBettors,
       };
     } catch (error) {
       logger.error(error?.message);
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Lỗi từ hệ thống" + error?.message,
+      };
+    }
+  }
+
+  private async rewardBetForDuck(currentGameId: string, winners: string[], winBet: number): Promise<ServiceResponse> {
+    if (!winners || winners.length === 0) {
+      return {
+        statusCode: 200,
+        isSuccess: true,
+        errorMessage: "Không có người thắng cuộc",
+      };
+    }
+    const API_KEY = process.env.API_KEY ?? "";
+    const APP_ID = process.env.APP_ID ?? "";
+    const url = process.env.REWARD_URL ?? "";
+    const headers = {
+      apiKey: API_KEY,
+      appId: APP_ID,
+      "Content-Type": "application/json",
+    };
+
+    const data = {
+      sessionId: currentGameId,
+      userRewardedList: winners?.map((winner) => ({
+        userId: winner,
+        amount: winBet,
+      })),
+    };
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify(data),
+      });
+      console.log("Response:", response);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("Result:", result);
+      return {
+        statusCode: 200,
+        isSuccess: true,
+        errorMessage: "rewardBetForDuck success",
+      };
+    } catch (error) {
+      console.error("Error:", error);
+      return {
+        statusCode: 500,
+        isSuccess: false,
+        errorMessage: " rewardBetForDuck error",
+      };
+    }
+  }
+  public async endGame(gameId: string): Promise<ServiceResponse> {
+    try {
+      if (!gameId) {
+        return {
+          statusCode: 400,
+          isSuccess: false,
+          errorMessage: "Dữ liệu không hợp lệ",
+        };
+      }
+      const game = this.listGame.find((game) => game.id === gameId);
+      if (!game) {
+        return {
+          statusCode: 404,
+          isSuccess: false,
+          errorMessage: "Không tìm thấy game",
+        };
+      }
+      game.gameStatus = "completed";
+      const listDucksResponse = await this._roomService.getDucksOfRoom(game.roomId);
+      const listDucks = listDucksResponse.data;
+      let duckWinner = listDucks[0].id;
+      let winnerScore = listDucks[0].score.totalScore;
+      listDucks.forEach((duck) => {
+        if (duck.score.totalScore > winnerScore) {
+          duckWinner = duck.id;
+          winnerScore = duck.score.totalScore;
+        }
+      });
+      const listWinner = game.gameBettors.filter((bettor) => bettor.duckId === duckWinner);
+      game.winners = listWinner.map((winner) => winner.userId);
+      if (game.winners.length > 0) {
+        await this.rewardBetForDuck(gameId, game.winners, game.totalBet / game.winners.length);
+      } else {
+        await this.rewardBetForDuck(gameId, game.bettors, game.totalBet / game.bettors.length);
+      }
+      return {
+        statusCode: 200,
+        isSuccess: true,
+        data: game,
+      };
+    } catch (error) {
+      logger.error(error?.message);
+      return {
+        statusCode: 500,
+        isSuccess: false,
+        errorMessage: "Lỗi từ hệ thống" + error?.message,
       };
     }
   }

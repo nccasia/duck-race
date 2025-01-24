@@ -1,23 +1,23 @@
 import { SocketEvents } from "@/constants/SocketEvents";
 import { useSocket } from "@/providers/SocketProvider";
-import useGameStore from "@/stores/gameStore";
+import useRoomStore from "@/stores/roomStore";
 import { useParams } from "react-router-dom";
 
 const AddUserTab = () => {
-  const { addUserText, setAddUserText } = useGameStore();
+  const { addDuckText, setAddDuckText } = useRoomStore();
   const socket = useSocket();
-  const { gameId } = useParams();
+  const { roomId } = useParams<{ roomId: string }>();
   const handleAddUser = () => {
     if (!socket) return;
-    if (addUserText.trim() === "" || !addUserText) return;
-    const users = addUserText.split("\n").join(",").split(",");
-    socket.emit(SocketEvents.EMIT.ADD_USER_TO_GAME, { gameId, players: users });
+    if (addDuckText.trim() === "" || !addDuckText) return;
+    const users = addDuckText.split("\n").join(",").split(",");
+    socket.emit(SocketEvents.EMIT.ADD_DUCK_TO_ROOM, { roomId, ducks: users });
   };
   return (
     <div className='h-full'>
       <textarea
-        value={addUserText}
-        onChange={(e) => setAddUserText(e.target.value)}
+        value={addDuckText}
+        onChange={(e) => setAddDuckText(e.target.value)}
         className='w-full bg-[#fbfbfb8a] text-gray-950 p-2 min-h-[200px] max-h-[300px] outline-none'
       />
       <div

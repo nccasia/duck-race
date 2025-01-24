@@ -1,6 +1,6 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import useGameStore from "@/stores/gameStore";
+import useRoomStore from "@/stores/roomStore";
 import { useEffect, useState } from "react";
 
 interface IMezonUserTabProps {
@@ -15,7 +15,7 @@ const MezonUserTab = ({ handleSaveListUser }: IMezonUserTabProps) => {
     setMezonClanUsers,
     setListMezonUser,
     listMezonUser,
-  } = useGameStore();
+  } = useRoomStore();
   const handleChangeSelectedClanRole = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedClanRole(e.target.value);
   };
