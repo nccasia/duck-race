@@ -1,6 +1,5 @@
 import { useSocket } from "@/providers/SocketProvider";
 import ModalCreateRoom from "./ModalCreateRoom";
-import ModalSearchRoom from "./ModalSearchRoom";
 import RoomItem from "./RoomItem";
 import { useEffect } from "react";
 import { SocketEvents } from "@/constants/SocketEvents";
@@ -56,7 +55,7 @@ const RoomPage = () => {
           <span className='font-titan text-2xl select-none'>Rooms</span>
         </div>
         <ModalCreateRoom />
-        <ModalSearchRoom />
+        {/* <ModalSearchRoom /> */}
       </div>
       <div className='h-[calc(100%-100px)] w-full overflow-y-auto [&::-webkit-scrollbar]:w-[0px] [&::-webkit-scrollbar-thumb]:hidden [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-track]:bg-gray-200'>
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full'>

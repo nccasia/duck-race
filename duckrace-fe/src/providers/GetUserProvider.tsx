@@ -1,26 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { User } from "@/interface/user/User";
 import useUserStore from "@/stores/userStore";
 import { MezonAppEvent, MezonWebViewEvent } from "@/types/webview";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 interface GetUserProviderProps {
   children: React.ReactNode;
 }
 const GetUserProvider = ({ children }: GetUserProviderProps) => {
   const setCurrentUser = useUserStore((state) => state.setCurrentUser);
-  const fetchCurrentUser = useMemo(() => {
-    const randomId = Math.floor(Math.random() * 9000) + 1000;
-    const user: User = {
-      id: randomId.toString(),
-      name: "Nguyen Văn A " + randomId,
-      username: "NguyenVanA " + randomId,
-      avatar: "https://avatar.iran.liara.run/public",
-      email: `Nva${randomId}@ncc.asia`,
-      wallet: 1000000,
-    };
-    return user;
-  }, []);
+  // const fetchCurrentUser = useMemo(() => {
+  //   const randomId = Math.floor(Math.random() * 9000) + 1000;
+  //   const user: User = {
+  //     id: randomId.toString(),
+  //     name: "Nguyen Văn A " + randomId,
+  //     username: "NguyenVanA " + randomId,
+  //     avatar: "https://avatar.iran.liara.run/public",
+  //     email: `Nva${randomId}@ncc.asia`,
+  //     wallet: 1000000,
+  //   };
+  //   return user;
+  // }, []);
   useEffect(() => {
     window.Mezon.WebView?.postEvent("PING" as MezonWebViewEvent, { message: "PING" }, () => {
       console.log("PING");

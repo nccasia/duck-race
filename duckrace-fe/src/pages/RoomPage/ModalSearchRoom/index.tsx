@@ -28,22 +28,20 @@ const ModalSearchRoom = () => {
   const inputRefs = useRef<HTMLInputElement[]>([]);
 
   useEffect(() => {
-    if (currentGame) {
-      const time = currentGame.expiredTime; // Ví dụ: 300s
-      const minutes = Math.floor(time / 60); // 5 phút
-      const seconds = time % 60; // 0 giây
-
-      // Định dạng MM:SS
-      const formattedTime = `${String(minutes).padStart(2, "0")}${String(seconds).padStart(2, "0")}`; // "0500"
-
-      // Gán giá trị cho từng vị trí
-      setTimeInput({
-        position1: parseInt(formattedTime[0]), // 0
-        position2: parseInt(formattedTime[1]), // 5
-        position3: parseInt(formattedTime[2]), // 0
-        position4: parseInt(formattedTime[3]), // 0
-      });
-    }
+    // if (currentGame) {
+    //   const time = currentGame.expiredTime; // Ví dụ: 300s
+    //   const minutes = Math.floor(time / 60); // 5 phút
+    //   const seconds = time % 60; // 0 giây
+    //   // Định dạng MM:SS
+    //   const formattedTime = `${String(minutes).padStart(2, "0")}${String(seconds).padStart(2, "0")}`; // "0500"
+    //   // Gán giá trị cho từng vị trí
+    //   setTimeInput({
+    //     position1: parseInt(formattedTime[0]), // 0
+    //     position2: parseInt(formattedTime[1]), // 5
+    //     position3: parseInt(formattedTime[2]), // 0
+    //     position4: parseInt(formattedTime[3]), // 0
+    //   });
+    // }
   }, [currentGame]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, position: number) => {
