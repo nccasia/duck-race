@@ -10,7 +10,7 @@ interface IModalShowResultProps {
 }
 const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
   const { isCompletedAll, gameStatus, setOpenModalBet, gameResult } = useGameStore();
-  const { listDucks, currentRoom, openModalShowResult, setOpenModalShowResult } = useRoomStore();
+  const { listDucks, currentRoom, openModalShowResult, setOpenModalShowResult, setOpenModalShowRank } = useRoomStore();
   const { currentUser } = useUserStore();
   const [listPlayerAfterSort, setListPlayerAfterSort] = useState<IDuck[]>([]);
   useEffect(() => {
@@ -25,6 +25,11 @@ const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
       setOpenModalBet(false);
     }
   }, [isCompletedAll, setOpenModalBet, setOpenModalShowResult]);
+  const handleOpenModalShowRank = () => {
+    setOpenModalShowRank(true);
+    console.log("openModalShowRank", openModalShowResult);
+    // setOpenModalShowResult(false);
+  };
   return (
     <Dialog open={openModalShowResult}>
       <DialogContent aria-describedby='modal-description' aria-labelledby='modal-title' role='dialog'>
@@ -58,10 +63,18 @@ const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
               </span>
             </div>
           </div>
-          <div className='h-[180px] flex items-center justify-center'>
+          <div className='h-[160px] flex items-center justify-center'>
             <div className='flex items-center'>
               <img className='w-[20px]' src='/Icons/PlusIcon.png' />
-              <span className='text-[50px] font-titan inline-block ml-1 mr-2'>{gameResult?.winBet}</span>
+              <span className='text-[50px] font-titan inline-block ml-1 mr-2'>
+                {gameResult?.bettors && gameResult.bettors.includes(currentUser.id ?? "")
+                  ? gameResult?.winners && gameResult.winners.length > 0
+                    ? gameResult.winners.includes(currentUser.id ?? "")
+                      ? gameResult.winBet
+                      : 0
+                    : gameResult?.winBet
+                  : 0}
+              </span>
               <img className='w-[30px]' src='/Icons/DollarIcon.png' />
             </div>
           </div>
@@ -97,6 +110,16 @@ const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
                 </div>
               </div>
             )}
+            <button
+              onClick={handleOpenModalShowRank}
+              className='w-[150px] h-[55px] cursor-pointer justify-center items-center relative filter hover:drop-shadow-[0_0_0.1rem_rgba(124,6,226,0.874)] transition-all active:drop-shadow-[0_0_0.2rem_rgba(124,6,226,0.874)]'
+            >
+              <img className='w-full h-full' src='/Buttons/Button-hover.png' />
+              <div className='flex  justify-center items-center gap-2 text-[30px] font-titan text-white absolute top-1 left-1/2 transform -translate-x-1/2 '>
+                <img className='w-[20px] ' src='/Icons/RewardIcon.png' />
+                <span>Rank</span>
+              </div>
+            </button>
           </div>
         </div>
       </DialogContent>

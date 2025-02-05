@@ -47,6 +47,7 @@ export const SocketEvents = {
     JOIN_ROOM_FAILED: "joinRoomFailed",
     LEFT_ROOM_SUCCESS: "leftRoomSuccess",
     LEFT_ROOM_FAILED: "leftRoomFailed",
+    USER_LEFT_ROOM: "userLeftRoom",
     CHECK_ROOM_BEFORE_JOIN_SUCCESS: "checkRoomBeforeJoinSuccess",
     CHECK_ROOM_BEFORE_JOIN_FAILED: "checkRoomBeforeJoinFailed",
     GET_MEMBER_OF_ROOM_SUCCESS: "getMemberOfRoomSuccess",

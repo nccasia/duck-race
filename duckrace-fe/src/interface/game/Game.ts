@@ -26,4 +26,5 @@ export interface IGameResult {
   gameId: string;
   totalBet: number;
   winBet: number;
+  bettors: string[];
 }

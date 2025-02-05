@@ -24,7 +24,7 @@ const MezonUserTab = ({ handleSaveListUser }: IMezonUserTabProps) => {
     if (selectedClanRole === mezonClanRoles[0]?.id) {
       setListMezonUser(mezonClanUsers);
     } else {
-      const listMezonUser = mezonClanUsers.filter((user) => user.role_id.includes(selectedClanRole ?? ""));
+      const listMezonUser = mezonClanUsers?.filter((user) => user.role_id?.includes(selectedClanRole ?? ""));
       setListMezonUser(listMezonUser);
     }
   }, [mezonClanRoles, mezonClanUsers, selectedClanRole, setListMezonUser]);
@@ -95,7 +95,7 @@ const MezonUserTab = ({ handleSaveListUser }: IMezonUserTabProps) => {
           <span className='absolute top-1 left-0 flex items-center justify-center w-full text-[20px] font-titan'>Save</span>
         </div>
       </div>
-      <div className='select-none flex-1 w-full h-full outline-none h-[calc(100%-50px)] outline-none p-2 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-red-500 [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-track]:bg-gray-200 bg-[#fdfdfd54] rounded-lg select-none'>
+      <div className='flex-1 w-full h-[calc(100%-50px)] outline-none p-2 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-red-500 [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-track]:bg-gray-200 bg-[#fdfdfd54] rounded-lg select-none'>
         {listMezonUser?.length > 0 &&
           listMezonUser?.map((player) => (
             <div

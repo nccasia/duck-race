@@ -67,7 +67,7 @@ class RoomService implements IRoomService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Error from server",
       };
     }
   }
@@ -87,7 +87,7 @@ class RoomService implements IRoomService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy phòng",
+          errorMessage: "Room is not found",
         };
       }
       this.listRooms.splice(roomIndex, 1);
@@ -101,7 +101,7 @@ class RoomService implements IRoomService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Error from server",
       };
     }
   }
@@ -114,7 +114,7 @@ class RoomService implements IRoomService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy phòng",
+          errorMessage: "Room is not found",
         };
       }
       return {
@@ -127,7 +127,7 @@ class RoomService implements IRoomService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Error from server",
       };
     }
   }
@@ -137,7 +137,7 @@ class RoomService implements IRoomService {
       return {
         statusCode: 400,
         isSuccess: false,
-        errorMessage: "Vui lòng kiểm tra lại thông tin",
+        errorMessage: "Please check your data",
       };
     }
     const room = this.listRooms.find((room) => room.roomId === data.roomId);
@@ -145,14 +145,14 @@ class RoomService implements IRoomService {
       return {
         statusCode: 400,
         isSuccess: false,
-        errorMessage: "Không tìm thấy thông tin phòng",
+        errorMessage: "Room is not found",
       };
     }
     if (room.status === "racing" || room.status === "betting") {
       return {
         statusCode: 400,
         isSuccess: false,
-        errorMessage: "Phòng đang trong quá trình chơi",
+        errorMessage: "Room is playing, you can't join now",
       };
     }
 
@@ -164,7 +164,7 @@ class RoomService implements IRoomService {
       return {
         statusCode: 400,
         isSuccess: false,
-        errorMessage: "Số dư không đủ để tham gia phòng",
+        errorMessage: "You don't have enough money to join this room",
       };
     }
     return {
@@ -204,31 +204,29 @@ class RoomService implements IRoomService {
 
   public async leaveRoom(room: IJoinRoomSubmitDTO): Promise<ServiceResponse> {
     try {
-      if (!room.roomId || !room.userId) {
+      if (!room.userId) {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Vui lòng kiểm tra lại thông tin",
+          errorMessage: "Please check your data",
         };
       }
-      const currentRoom = await this.getRoomById(room.roomId);
-      if (!currentRoom.isSuccess) {
-        return currentRoom;
+
+      const currentRoom = this.listRooms.find((r) => r.members.includes(room.userId));
+      if (currentRoom) {
+        currentRoom.members = currentRoom.members.filter((userId) => userId !== room.userId);
+        if (currentRoom.ownerId === room.userId) {
+          currentRoom.ownerId = currentRoom.members[0];
+          currentRoom.owner = (await this._userService.getUserById(currentRoom.ownerId)).data as User;
+        }
+        if (currentRoom.members.length === 0) {
+          this.removeRoom(currentRoom.roomId);
+        }
       }
-      const newRoom = currentRoom.data as Room;
-      const userIndex = newRoom.members.findIndex((userId) => userId === room.userId);
-      if (userIndex === -1) {
-        return {
-          statusCode: 400,
-          isSuccess: false,
-          errorMessage: "Người chơi không tồn tại trong phòng",
-        };
-      }
-      newRoom.members.splice(userIndex, 1);
       return {
         statusCode: 200,
         isSuccess: true,
-        data: newRoom,
+        data: currentRoom,
       };
     } catch (error) {
       logger.error(error?.message);
@@ -273,35 +271,40 @@ class RoomService implements IRoomService {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Vui lòng kiểm tra lại thông tin",
+          errorMessage: "Please check your data",
         };
       }
       if (room.roomBet <= 0) {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Số tiền cược không hợp lệ",
+          errorMessage: "Your bet must be greater than 0",
         };
       }
-      if (room.roomBet > 1000000) {
+      if (room.roomBet > 100000) {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Số tiền cược quá lớn, vui lòng cược ít hơn 1 triệu",
+          errorMessage: "Your bet must be less than 100000",
         };
       }
 
+      const owner = await this._userService.getUserById(room.ownerId);
+      if (!owner || !owner.isSuccess) {
+        return owner;
+      }
       const newRoom = new Room();
       const roomId = generateId(6, "number");
       newRoom.roomInfo = {
         roomId,
         roomName: room.roomName,
-        roomBet: 1, // room.roomBet,
+        roomBet: +room.roomBet,
         roomPassword: room.roomPassword,
         roomUsePassword: room.roomUsePassword,
       };
       newRoom.ownerId = room.ownerId;
       newRoom.roomId = roomId;
+      newRoom.owner = owner.data as User;
       newRoom.members = [];
       newRoom.isPlaying = false;
       newRoom.currentTime = 0;
@@ -346,7 +349,7 @@ class RoomService implements IRoomService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy phòng",
+          errorMessage: "Room is not found",
         };
       }
       return {
@@ -370,7 +373,7 @@ class RoomService implements IRoomService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy phòng",
+          errorMessage: "Room is not found",
         };
       }
       console.log("data", addDuckData);
@@ -400,7 +403,7 @@ class RoomService implements IRoomService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Error from server",
       };
     }
   }
@@ -413,7 +416,7 @@ class RoomService implements IRoomService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy room",
+          errorMessage: "Room is not found",
         };
       }
       room.ducks = room.ducks.filter((player) => !removeDuckData.ducks.includes(player.id));
@@ -431,7 +434,7 @@ class RoomService implements IRoomService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Error from server",
       };
     }
   }
@@ -443,7 +446,7 @@ class RoomService implements IRoomService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy room",
+          errorMessage: "Room is not found",
         };
       }
       currentRoom.expiredTime = changeTimeData.expiredTime;
@@ -457,7 +460,7 @@ class RoomService implements IRoomService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Error from server",
       };
     }
   }
@@ -469,7 +472,7 @@ class RoomService implements IRoomService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy room",
+          errorMessage: "Room is not found",
         };
       }
       updateUserData.ducks.forEach((duck, index) => {
@@ -489,7 +492,7 @@ class RoomService implements IRoomService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Error from server",
       };
     }
   }
@@ -502,7 +505,7 @@ class RoomService implements IRoomService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy room",
+          errorMessage: "Room is not found",
         };
       }
       currentRoom.ducks.forEach((player) => {
@@ -523,7 +526,7 @@ class RoomService implements IRoomService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Error from server",
       };
     }
   }
@@ -535,14 +538,14 @@ class RoomService implements IRoomService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy game",
+          errorMessage: "Game is not found",
         };
       }
       if (currentRoom.ducks.length < 5) {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Phải có ít nhất 5 con vit để chơi",
+          errorMessage: "You need at least 5 ducks to start the game",
         };
       }
       const resetGameResponse = await this.resetGame(startGameData);
@@ -556,7 +559,7 @@ class RoomService implements IRoomService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Error from server",
       };
     }
   }
@@ -568,7 +571,7 @@ class RoomService implements IRoomService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy room",
+          errorMessage: "Room is not found",
         };
       }
 
@@ -598,7 +601,7 @@ class RoomService implements IRoomService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Error from server",
       };
     }
   }
@@ -609,7 +612,7 @@ class RoomService implements IRoomService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy room",
+          errorMessage: "Room is not found",
         };
       }
       currentRoom.status = "betting";
@@ -623,7 +626,7 @@ class RoomService implements IRoomService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Error from server",
       };
     }
   }

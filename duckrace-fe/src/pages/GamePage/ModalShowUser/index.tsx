@@ -18,7 +18,7 @@ const ModalUser = () => {
   };
 
   const handleChangeOpenModalShowUser = (isOpen: boolean) => {
-    if (gameStatus !== "waiting") {
+    if (gameStatus !== "waiting" && !openModalShowUser) {
       return;
     }
     setOpenModalShowUser(isOpen);
@@ -47,13 +47,13 @@ const ModalUser = () => {
           <Tabs value={tabs} onValueChange={(e) => setTabs(e)} className='w-full h-[400px]'>
             <TabsList className='grid w-full grid-cols-3 h-[50px]'>
               <TabsTrigger className='font-titan h-[40px]' value='list-user'>
-                List Users
+                List Ducks
               </TabsTrigger>
               <TabsTrigger className='font-titan h-[40px]' value='add-user'>
-                Add Users
+                Add Ducks
               </TabsTrigger>
               <TabsTrigger className='font-titan h-[40px]' value='mezon-user'>
-                Mezon Users
+                Mezon Ducks
               </TabsTrigger>
             </TabsList>
             <TabsContent

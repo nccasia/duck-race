@@ -57,6 +57,7 @@ class SocketService implements ISocketService {
     socket.on(SocketEvents.ON.LEFT_ROOM, (data: IJoinRoomSubmitDTO) => this.onLeaveRoom(socket, data));
     socket.on(SocketEvents.ON.CHECK_ROOM_BEFORE_JOIN, (data: IJoinRoomSubmitDTO) => this.onCheckRoomBeforeJoin(socket, data));
     socket.on(SocketEvents.ON.GET_ROOM_INFO, (roomId: string) => this.onGetRoomInfo(socket, roomId));
+    socket.on(SocketEvents.ON.GET_MEMBER_OF_ROOM, (roomId: string) => this.onGetMemberOfRoom(socket, roomId));
 
     socket.on("disconnect", () => this.onDisconnect(socket));
   };
@@ -109,10 +110,25 @@ class SocketService implements ISocketService {
     const getRoomInfoResponse = await this._roomService.getRoomById(roomId);
     if (getRoomInfoResponse.isSuccess) {
       console.log(`User with socket id ${socket.id} get room ${roomId} successfully`);
+      const getMemberOfRoomResponse = await this._roomService.getMemberOfRoom(roomId);
       socket.emit(SocketEvents.EMIT.GET_ROOM_INFO_SUCCESS, getRoomInfoResponse);
+      socket.emit(SocketEvents.EMIT.GET_MEMBER_OF_ROOM_SUCCESS, getMemberOfRoomResponse);
     } else {
       console.log(`User with socket id ${socket.id} get room ${roomId} failed: ${getRoomInfoResponse.errorMessage}`);
       socket.emit(SocketEvents.EMIT.GET_ROOM_INFO_FAILED, getRoomInfoResponse);
+    }
+  };
+
+  onGetMemberOfRoom = async (socket: Socket, roomId: string) => {
+    const getMemberOfRoomResponse = await this._roomService.getMemberOfRoom(roomId);
+    if (getMemberOfRoomResponse.isSuccess) {
+      console.log(`User with socket id ${socket.id} get member of room ${roomId} successfully`);
+      socket.emit(SocketEvents.EMIT.GET_MEMBER_OF_ROOM_SUCCESS, getMemberOfRoomResponse);
+    } else {
+      console.log(
+        `User with socket id ${socket.id} get member of room ${roomId} failed: ${getMemberOfRoomResponse.errorMessage}`
+      );
+      socket.emit(SocketEvents.EMIT.GET_MEMBER_OF_ROOM_FAILED, getMemberOfRoomResponse);
     }
   };
 
@@ -135,8 +151,8 @@ class SocketService implements ISocketService {
       console.log(`User with socket id ${socket.id} join room ${data.roomId} successfully`);
       socket.join(data.roomId);
       socket.emit(SocketEvents.EMIT.JOIN_ROOM_SUCCESS, joinRoomResponse);
-      const getListRoomResponse = await this._roomService.getMemberOfRoom(data.roomId);
-      this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.GET_MEMBER_OF_ROOM_SUCCESS, getListRoomResponse);
+      const getMemberOfRoomResponse = await this._roomService.getMemberOfRoom(data.roomId);
+      this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.GET_MEMBER_OF_ROOM_SUCCESS, getMemberOfRoomResponse);
     } else {
       console.log(`User with socket id ${socket.id} join room failed: ${joinRoomResponse.errorMessage}`);
       socket.emit(SocketEvents.EMIT.JOIN_ROOM_FAILED, joinRoomResponse);
@@ -147,10 +163,21 @@ class SocketService implements ISocketService {
     const leaveRoomResponse = await this._roomService.leaveRoom(data);
     if (leaveRoomResponse.isSuccess) {
       console.log(`User with socket id ${socket.id} left room ${data.roomId} successfully`);
-      socket.leave(data.roomId);
+      const roomData = leaveRoomResponse.data as Room;
+      if (!roomData) return;
+      socket.leave(roomData.roomId);
       socket.emit(SocketEvents.EMIT.LEFT_ROOM_SUCCESS, leaveRoomResponse);
-      const getListRoomResponse = await this._roomService.getMemberOfRoom(data.roomId);
-      this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.GET_MEMBER_OF_ROOM_SUCCESS, getListRoomResponse);
+      const getMemberOfRoomResponse = await this._roomService.getMemberOfRoom(roomData.roomId);
+      this.socketServer.to(roomData.roomId).emit(SocketEvents.EMIT.GET_MEMBER_OF_ROOM_SUCCESS, getMemberOfRoomResponse);
+      this.socketServer.to(roomData.roomId).emit(SocketEvents.EMIT.USER_LEFT_ROOM, {
+        statusCode: 200,
+        isSuccess: true,
+        errorMessage: "User leave room successfully",
+        data: {
+          userId: data.userId,
+          roomInfo: leaveRoomResponse.data as Room,
+        },
+      });
     } else {
       console.log(`User with socket id ${socket.id} left room failed: ${leaveRoomResponse.errorMessage}`);
       socket.emit(SocketEvents.EMIT.LEFT_ROOM_FAILED, leaveRoomResponse);
@@ -171,8 +198,6 @@ class SocketService implements ISocketService {
   onAddDuckToRoom = async (socket: Socket, data: IAddDuckToRoomDTO) => {
     const addDuckToRoom = await this._roomService.addDuckToRoom(data);
     if (addDuckToRoom.isSuccess) {
-      console.log(`User ${socket.id} added to game`);
-      console.log("addDuckToRoom", addDuckToRoom);
       socket.emit(SocketEvents.EMIT.ADD_DUCK_TO_ROOM_SUCCESS, addDuckToRoom);
       const getDucksOfRoomResponse = await this._roomService.getDucksOfRoom(addDuckToRoom.data.roomId);
       this.socketServer.to(addDuckToRoom.data.roomId).emit(SocketEvents.EMIT.GET_DUCKS_OF_ROOM_SUCCESS, getDucksOfRoomResponse);
@@ -243,6 +268,7 @@ class SocketService implements ISocketService {
                     endGameResponse.data.winners.length > 0
                       ? endGameResponse.data.totalBet / endGameResponse.data.winners.length
                       : endGameResponse.data.totalBet / (endGameResponse.data.bettors.length || 1),
+                  bettors: endGameResponse.data.bettors,
                 };
                 this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.END_GAME_SUCCESS, dataEmit);
               }
@@ -321,8 +347,10 @@ class SocketService implements ISocketService {
     }
   };
 
-  onDisconnect = (socket: Socket) => {
-    console.log(`User ${socket.id} disconnected`);
+  onDisconnect = async (socket: Socket) => {
+    const userBySocketResponse = await this._userService.getUserBySocketId(socket.id);
+    const user = userBySocketResponse.data as User;
+    this.onLeaveRoom(socket, { userId: user.id, roomId: "" });
   };
 }
 export default SocketService;

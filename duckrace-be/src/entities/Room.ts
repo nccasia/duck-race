@@ -32,6 +32,7 @@ class Duck {
 class Room {
   public roomId = uuid();
   public ownerId: string;
+  public owner: User;
   public roomInfo: RoomInfo;
   public currentGame: string;
   public members: string[] = [];

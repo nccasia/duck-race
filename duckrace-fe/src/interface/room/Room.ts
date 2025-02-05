@@ -1,3 +1,5 @@
+import { User } from "../user/User";
+
 export interface ICreateRoomData {
   roomName: string;
   roomBet: number;
@@ -40,6 +42,7 @@ export interface Room {
   currentGame: string;
   members: string[];
   isPlaying: string;
+  owner?: User;
 
   expiredTime: number;
   currentTime: number;

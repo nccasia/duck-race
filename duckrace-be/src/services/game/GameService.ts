@@ -34,7 +34,7 @@ class GameService implements IGameService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy phòng",
+          errorMessage: "Room is not found",
         };
       }
 
@@ -60,20 +60,19 @@ class GameService implements IGameService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Error from server",
       };
     }
   }
 
   public async getGameById(gameId: string): Promise<ServiceResponse> {
     try {
-      console.log("gameId", gameId);
       const game = this.listGame.find((game) => game.id === gameId);
       if (!game) {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy game",
+          errorMessage: "Game is not found",
         };
       }
       return {
@@ -86,19 +85,18 @@ class GameService implements IGameService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Error from server",
       };
     }
   }
 
   public async betForDuck(betData: IBetForDuckDTO): Promise<ServiceResponse> {
     try {
-      console.log("betData", betData);
       if (!betData.gameId || !betData.userId || !betData.ducks) {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Dữ liệu không hợp lệ",
+          errorMessage: "Please fill in all fields",
         };
       }
       const game = this.listGame.find((game) => game.id === betData.gameId);
@@ -106,7 +104,7 @@ class GameService implements IGameService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy game",
+          errorMessage: "Game is not found",
         };
       }
       betData.ducks.forEach((duckId) => {
@@ -135,7 +133,7 @@ class GameService implements IGameService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống" + error?.message,
+        errorMessage: "Error from server" + error?.message,
       };
     }
   }
@@ -146,7 +144,7 @@ class GameService implements IGameService {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Dữ liệu không hợp lệ",
+          errorMessage: "Please fill in all fields",
         };
       }
       const game = this.listGame.find((game) => game.id === confirmBetData.gameId);
@@ -154,7 +152,7 @@ class GameService implements IGameService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy game",
+          errorMessage: "Game is not found",
         };
       }
       game.gameBettors.forEach((bettor) => {
@@ -167,7 +165,7 @@ class GameService implements IGameService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Error from server",
       };
     }
   }
@@ -178,7 +176,7 @@ class GameService implements IGameService {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Dữ liệu không hợp lệ",
+          errorMessage: "Please fill in all fields",
         };
       }
       const game = this.listGame.find((game) => game.id === gameId);
@@ -186,7 +184,7 @@ class GameService implements IGameService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy game",
+          errorMessage: "Game is not found",
         };
       }
       const listUser = this._userService.getListUsers();
@@ -216,7 +214,7 @@ class GameService implements IGameService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống" + error?.message,
+        errorMessage: "Error from server" + error?.message,
       };
     }
   }
@@ -226,7 +224,7 @@ class GameService implements IGameService {
       return {
         statusCode: 200,
         isSuccess: true,
-        errorMessage: "Không có người thắng cuộc",
+        errorMessage: "No winners",
       };
     }
     const API_KEY = process.env.API_KEY ?? "";
@@ -251,13 +249,11 @@ class GameService implements IGameService {
         headers: headers,
         body: JSON.stringify(data),
       });
-      console.log("Response:", response);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log("Result:", result);
       return {
         statusCode: 200,
         isSuccess: true,
@@ -278,7 +274,7 @@ class GameService implements IGameService {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Dữ liệu không hợp lệ",
+          errorMessage: "Please fill in all fields",
         };
       }
       const game = this.listGame.find((game) => game.id === gameId);
@@ -286,7 +282,7 @@ class GameService implements IGameService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy game",
+          errorMessage: "Game is not found",
         };
       }
       game.gameStatus = "completed";
@@ -317,7 +313,7 @@ class GameService implements IGameService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống" + error?.message,
+        errorMessage: "Error from server" + error?.message,
       };
     }
   }

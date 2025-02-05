@@ -18,6 +18,8 @@ import useRoomStore from "@/stores/roomStore";
 import ModalBet from "./ModalBet";
 import { toast } from "react-toastify";
 import ModalShowRank from "./ModalShowRank";
+import ModalRoomInfomation from "./ModalRoomInfomation";
+import { User } from "@/interface/user/User";
 
 const GamePage = () => {
   const socket = useSocket();
@@ -55,6 +57,7 @@ const GamePage = () => {
     setTotalDucks,
     setOpenModalShowRank,
     setOpenModalShowResult,
+    setRoomMembers,
   } = useRoomStore();
   const { currentUser } = useUserStore();
   const [listDuckToShow, setListDuckToShow] = useState<IDuck[]>([]);
@@ -63,21 +66,40 @@ const GamePage = () => {
     if (!socket || !roomId) return;
     socket.emit(SocketEvents.EMIT.GET_ROOM_INFO, roomId);
     socket.on(SocketEvents.ON.GET_ROOM_INFO_SUCCESS, (data: AppResponse<Room>) => {
+      console.log("room info", data);
       setCurrentRoom(data.data as Room);
       setListDucks(data.data?.ducks || []);
       setTotalDucks(data.data?.totalDuck || 0);
-      navigate(`${ROUTES.ROOM_DETAIL.replace(":roomId", (data.data as Room).roomId)}?gameId=${(data.data as Room).currentGame}`);
+
+      setIsRacing(false);
+      setIsResetGame(true);
+      setGameStatus("waiting");
+      setIsCompletedAll(false);
+      setOpenModalShowRank(false);
+      setOpenModalShowResult(false);
+      setListDuckPicked([]);
+      setIsConfirmedBet(false);
+
+      navigate(
+        `${ROUTES.ROOM_DETAIL.replace(":roomId", (data.data as Room)?.roomId)}?gameId=${(data.data as Room)?.currentGame}`
+      );
     });
     socket.on(SocketEvents.ON.GET_ROOM_INFO_FAILED, (data: AppResponse<null>) => {
-      console.log("GamePage -> data", data);
+      console.log("Get room info failed", data);
+    });
+    socket.on(SocketEvents.ON.GET_MEMBER_OF_ROOM_SUCCESS, (data: AppResponse<User[]>) => {
+      setRoomMembers(data.data || []);
+    });
+    socket.on(SocketEvents.ON.GET_MEMBER_OF_ROOM_FAILED, (data: AppResponse<null>) => {
+      console.log("Member Of Room", data);
     });
     socket.on(SocketEvents.ON.GET_DUCKS_OF_ROOM_SUCCESS, (data: AppResponse<IDuck[]>) => {
-      console.log("GamePage -> data", data);
+      console.log("Get duck of room success:", data);
       setListDucks(data.data || []);
       setTotalDucks(data.data?.length || 0);
     });
     socket.on(SocketEvents.ON.GET_DUCKS_OF_ROOM_FAILED, (data: AppResponse<null>) => {
-      console.log("GamePage -> data", data);
+      console.log("Get duck of room fail: ", data);
     });
     socket.on(SocketEvents.ON.REMOVE_USER_FROM_GAME_SUCCESS, (data: AppResponse<Room>) => {
       setCurrentRoom(data.data as Room);
@@ -116,7 +138,25 @@ const GamePage = () => {
       socket.off(SocketEvents.ON.UPDATE_LIST_DUCK_OF_ROOM_SUCCESS);
       socket.off(SocketEvents.ON.UPDATE_LIST_DUCK_OF_ROOM_FAILED);
     };
-  }, [navigate, roomId, setCurrentRoom, setListDucks, setTotalDucks, socket]);
+  }, [
+    navigate,
+    roomId,
+    setCurrentRoom,
+    setListDucks,
+    setTotalDucks,
+    socket,
+    setAddDuckText,
+    setTabs,
+    setRoomMembers,
+    setIsRacing,
+    setIsResetGame,
+    setGameStatus,
+    setIsCompletedAll,
+    setOpenModalShowRank,
+    setOpenModalShowResult,
+    setListDuckPicked,
+    setIsConfirmedBet,
+  ]);
 
   useEffect(() => {
     setOpenModalShowUser(true);
@@ -140,6 +180,19 @@ const GamePage = () => {
       setTotalDucks(0);
       navigate(ROUTES.ROOM);
     });
+
+    socket.on(
+      SocketEvents.ON.USER_LEFT_ROOM,
+      (
+        data: AppResponse<{
+          userId: string;
+          roomInfo: Room;
+        }>
+      ) => {
+        console.log("left room", data);
+        setCurrentRoom(data.data?.roomInfo as Room);
+      }
+    );
     socket.on(SocketEvents.ON.OUT_ROOM_FAILED, (data: AppResponse<null>) => {
       console.log("GamePage -> data", data);
       navigate(ROUTES.HOME);
@@ -168,7 +221,6 @@ const GamePage = () => {
       console.log("GamePage -> data", data);
     });
     socket.on(SocketEvents.ON.CREATE_NEW_GAME_SUCCESS, (data: AppResponse<Room>) => {
-      console.log("reset game", data);
       setCurrentRoom(data.data as Room);
       setListDucks(data.data?.ducks || []);
       setTotalDucks(data.data?.totalDuck || 0);
@@ -233,6 +285,8 @@ const GamePage = () => {
       socket.off(SocketEvents.ON.START_BET_FAILED);
       socket.off(SocketEvents.ON.END_BET);
       socket.off(SocketEvents.ON.START_GAME_NOW);
+      socket.off(SocketEvents.ON.GET_GAME_BETTORS_SUCCESS);
+      socket.off(SocketEvents.ON.USER_LEFT_ROOM);
     };
   }, [
     setListDucks,
@@ -250,12 +304,28 @@ const GamePage = () => {
     currentUser?.id,
     setListBettorOfDucks,
     setCurrentRoom,
+    setOpenModalShowRank,
+    setOpenModalShowResult,
+    setListDuckPicked,
+    setIsConfirmedBet,
   ]);
 
   useEffect(() => {
     window.Mezon.WebView?.postEvent("GET_CLAN_USERS" as MezonWebViewEvent, {}, () => {});
-    window.Mezon.WebView?.onEvent("CLAN_USERS_RESPONSE" as MezonAppEvent, (_, data) => {
-      setMezonClanUsers(data as IMezonUser[]);
+    window.Mezon.WebView?.onEvent("CLAN_USERS_RESPONSE" as MezonAppEvent, (_, data?: IMezonUser[]) => {
+      if (!data) return;
+      const users: IMezonUser[] = data.map((user: IMezonUser) => ({
+        id: user.id,
+        role_id: user.role_id ?? [],
+        userChannelId: user.userChannelId,
+        user: {
+          display_name: user.user.display_name,
+          user_name: user.user.user_name,
+          avatar_url: user.user.avatar_url,
+        },
+        isSelected: false,
+      }));
+      setMezonClanUsers(users);
     });
     window.Mezon.WebView?.postEvent("GET_CLAN_ROLES" as MezonWebViewEvent, {}, () => {});
     window.Mezon.WebView?.onEvent("CLAN_ROLES_RESPONSE" as MezonAppEvent, (_, data) => {
@@ -281,7 +351,7 @@ const GamePage = () => {
       });
       setIsConfirmedBet(true);
     });
-    window.Mezon.WebView?.onEvent("SEND_TOKEN_RESPONSE_FAILED" as MezonAppEvent, (_, response: any) => {
+    window.Mezon.WebView?.onEvent("SEND_TOKEN_RESPONSE_FAILED" as MezonAppEvent, (_, response) => {
       console.log("send token failed", response);
     });
     return () => {
@@ -347,6 +417,7 @@ const GamePage = () => {
           <img src='/Buttons/SmallButton-pressed.png' />
           <img className='w-[30px] absolute top-[12px] left-[12px]' src='/Icons/ExitIcon.png' />
         </div>
+        <ModalRoomInfomation />
         <div
           className='w-[500px] h-[150px] flex justify-center items-center absolute top-0 left-[50%] translate-x-[-50%]'
           style={{ filter: "drop-shadow(0 0 .3rem rgba(124, 6, 226, .874))" }}

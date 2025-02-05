@@ -6,6 +6,7 @@ import { useSocket } from "@/providers/SocketProvider";
 import useRoomStore from "@/stores/roomStore";
 import useUserStore from "@/stores/userStore";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 const ModalCreateRoom = () => {
   const [openModalCreateRoom, setOpenModalCreateRoom] = useState(false);
@@ -31,7 +32,7 @@ const ModalCreateRoom = () => {
   const handleCreateNewRoom = () => {
     if (!socket) return;
     if (!createRoomData.roomName || !createRoomData.roomBet || createRoomData.roomBet <= 0) {
-      console.log("Vui lòng kiểm tra lại thông tin");
+      toast.warning("Please fill in all fields");
       return;
     }
     const dataSubmit = {
@@ -45,21 +46,20 @@ const ModalCreateRoom = () => {
     if (!socket) return;
     socket.on(SocketEvents.ON.CREATE_ROOM_SUCCESS, (data: AppResponse<Room>) => {
       handleOpenModalCreateRoom(false);
-      console.log("Create room success", data);
       socket.emit(SocketEvents.EMIT.JOIN_ROOM, {
         roomId: (data.data as Room).roomId,
         userId: currentUser.id,
       });
       resetCreateRoomData();
     });
-    socket.on(SocketEvents.ON.CREATE_ROOM_FAILED, (data) => {
-      console.log("Create room failed", data);
+    socket.on(SocketEvents.ON.CREATE_ROOM_FAILED, (data: AppResponse<null>) => {
+      toast.error(data.errorMessage);
     });
     return () => {
       socket.off(SocketEvents.ON.CREATE_ROOM_SUCCESS);
       socket.off(SocketEvents.ON.CREATE_ROOM_FAILED);
     };
-  }, [socket]);
+  }, [currentUser.id, resetCreateRoomData, socket]);
 
   return (
     <Dialog open={openModalCreateRoom} onOpenChange={handleOpenModalCreateRoom}>

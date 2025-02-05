@@ -1,11 +1,13 @@
 // stores/counterStore.ts
 import { ICreateRoomData, IDuck, IMezonClan, IMezonUser, Room } from "@/interface/room/Room";
+import { User } from "@/interface/user/User";
 import { create } from "zustand";
 
 interface RoomState {
   createRoomData: ICreateRoomData;
   listRoom: Room[];
   currentRoom: Room | null;
+  roomMembers: User[];
   listDucks: IDuck[];
   totalDucks: number;
   openModalShowUser: boolean;
@@ -22,6 +24,7 @@ interface RoomState {
   resetCreateRoomData: () => void;
   setListRoom: (data: Room[]) => void;
   setCurrentRoom: (data: Room | null) => void;
+  setRoomMembers: (data: User[]) => void;
   setListDucks: (data: IDuck[]) => void;
   setTotalDucks: (data: number) => void;
   setOpenModalShowUser: (openModalShowUser: boolean) => void;
@@ -42,6 +45,7 @@ const useRoomStore = create<RoomState>((set) => ({
   },
   listRoom: [],
   currentRoom: null,
+  roomMembers: [],
   listDucks: [],
   totalDucks: 0,
   openModalShowUser: false,
@@ -58,6 +62,7 @@ const useRoomStore = create<RoomState>((set) => ({
   resetCreateRoomData: () => set({ createRoomData: { roomName: "", roomBet: 1 } }),
   setListRoom: (data: Room[]) => set({ listRoom: data }),
   setCurrentRoom: (data: Room | null) => set({ currentRoom: data }),
+  setRoomMembers: (data: User[]) => set({ roomMembers: data }),
   setListDucks: (data: IDuck[]) => set({ listDucks: data }),
   setTotalDucks: (data: number) => set({ totalDucks: data }),
   setOpenModalShowUser: (openModalShowUser: boolean) => set({ openModalShowUser }),

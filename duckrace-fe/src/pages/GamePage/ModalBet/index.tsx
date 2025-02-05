@@ -1,19 +1,20 @@
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import useGameStore from "@/stores/gameStore";
 import useRoomStore from "@/stores/roomStore";
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useSocket } from "@/providers/SocketProvider";
 import { SocketEvents } from "@/constants/SocketEvents";
 import useUserStore from "@/stores/userStore";
 import { MezonWebViewEvent } from "@/types/webview";
 const ModalBet = () => {
+  const [timeCountDown, setTimeCountDown] = useState<number | null>(30);
+  const [isActive, setIsActive] = useState(false);
   const { gameStatus, openModalBet, setOpenModalBet, listBettorOfDucks, listDuckPicked, setListDuckPicked, isConfirmedBet } =
     useGameStore();
   const { currentRoom } = useRoomStore();
   const { currentUser } = useUserStore();
   const socket = useSocket();
-  const countdownRef = useRef<{ startCountdown: () => void; resetCountdown: () => void }>(null);
   const handleOpenModalBet = (isOpen: boolean) => {
     if (gameStatus === "betting") {
       return;
@@ -56,21 +57,37 @@ const ModalBet = () => {
   };
 
   useEffect(() => {
-    if (gameStatus === "betting" && openModalBet) {
-      if (countdownRef.current) {
-        countdownRef.current.startCountdown();
-      }
-    } else if (!openModalBet) {
-      console.log("Resetting countdown...");
-      countdownRef.current?.resetCountdown();
-    }
-  }, [gameStatus, openModalBet]);
-
-  useEffect(() => {
     if (!socket || !currentRoom?.currentGame) return;
     console.log("Emitting get game bettors...");
     socket.emit(SocketEvents.EMIT.GET_GAME_BETTORS, currentRoom?.currentGame);
   }, [currentRoom?.currentGame, openModalBet, socket]);
+
+  useEffect(() => {
+    if (gameStatus === "betting") {
+      setTimeCountDown(30);
+      setIsActive(true);
+    } else if (gameStatus === "waiting") {
+      setIsActive(false);
+      setTimeCountDown(30);
+    }
+  }, [gameStatus, openModalBet]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    if (isActive && timeCountDown !== null) {
+      interval = setTimeout(() => {
+        if (timeCountDown > 0) {
+          setTimeCountDown(timeCountDown - 1);
+        } else {
+          setIsActive(false);
+        }
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearTimeout(interval);
+    };
+  }, [isActive, timeCountDown]);
   return (
     <Dialog open={openModalBet} onOpenChange={handleOpenModalBet}>
       <DialogTrigger asChild>
@@ -92,10 +109,22 @@ const ModalBet = () => {
               ? "THE MATCH WILL START IN 30s"
               : "LIST DUCKS YOU CAN BET"}
           </div>
-          {/* <div className='w-[150px] h-[55px] justify-center items-center relative '>
-            <img className='w-full h-full' src='/Buttons/Button-hover.png' />
-            <CountdownTime ref={countdownRef} initTime={30} />
-          </div> */}
+          {gameStatus === "betting" && (
+            <div className='w-[150px] h-[55px] justify-center items-center relative '>
+              <img className='w-full h-full' src='/Buttons/Button-hover.png' />
+              <div className='flex justify-center items-center gap-1 text-[30px] font-titan text-white absolute top-1 left-1/2 transform -translate-x-1/2 '>
+                <span className='flex justify-center items-center w-[50px]'>
+                  {timeCountDown !== null && Math.floor(timeCountDown / 60) >= 0
+                    ? `0${Math.floor(timeCountDown / 60)}`.slice(-2)
+                    : "00"}
+                </span>
+                <span>:</span>
+                <span className='flex justify-center items-center w-[50px]'>
+                  {timeCountDown !== null && timeCountDown % 60 >= 0 ? `0${timeCountDown % 60}`.slice(-2) : "00"}
+                </span>
+              </div>
+            </div>
+          )}
           <div className='text-center text-[25px]'>Pick your duck if you want to bet</div>
           <div className='w-full h-[380px] bg-[#9f9e9e26] rounded-xl overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-red-500 [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-track]:bg-gray-200'>
             <div className='grid grid-cols-4 gap-2 p-2'>
