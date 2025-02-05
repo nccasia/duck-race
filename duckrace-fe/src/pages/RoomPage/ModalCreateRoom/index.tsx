@@ -5,7 +5,7 @@ import { Room } from "@/interface/room/Room";
 import { useSocket } from "@/providers/SocketProvider";
 import useRoomStore from "@/stores/roomStore";
 import useUserStore from "@/stores/userStore";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { toast } from "react-toastify";
 
 const ModalCreateRoom = () => {
@@ -24,9 +24,12 @@ const ModalCreateRoom = () => {
     setCreateRoomData(newData);
   };
 
-  const handleOpenModalCreateRoom = (isOpen: boolean) => {
-    setOpenModalCreateRoom(isOpen);
-  };
+  const handleOpenModalCreateRoom = useCallback(
+    (isOpen: boolean) => {
+      setOpenModalCreateRoom(isOpen);
+    },
+    [setOpenModalCreateRoom]
+  );
 
   const handleCreateNewRoom = () => {
     if (!socket) return;
