@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 const RoomPage = () => {
   const socket = useSocket();
   const navigate = useNavigate();
-  const { setListRoom, listRoom } = useRoomStore();
+  const { setListRoom, listRoom, setOpenModalCreateRoom } = useRoomStore();
   const { currentUser } = useUserStore();
   const handleJoinRoom = (roomId: string) => {
     if (!socket) return;
@@ -58,13 +58,31 @@ const RoomPage = () => {
         {/* <ModalSearchRoom /> */}
       </div>
       <div className='h-[calc(100%-100px)] w-full overflow-y-auto [&::-webkit-scrollbar]:w-[0px] [&::-webkit-scrollbar-thumb]:hidden [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-track]:bg-gray-200'>
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full'>
-          {listRoom?.map((room, index) => (
-            <div className='w-full flex justify-center items-center' key={index}>
-              <RoomItem onJoinRoom={handleJoinRoom} room={room} index={index} />
+        {listRoom.length > 0 ? (
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full'>
+            {listRoom?.map((room, index) => (
+              <div className='w-full flex justify-center items-center' key={index}>
+                <RoomItem onJoinRoom={handleJoinRoom} room={room} index={index} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className='flex justify-center items-center h-full'>
+            <div className='flex flex-col items-center gap-2 font-titan text-gray-600'>
+              <span className='text-2xl '>Wellcome to duckrace game!</span>
+              <span>No rooms have been created yet.</span>
+              <div
+                onClick={() => setOpenModalCreateRoom(true)}
+                className='w-[220px] h-[60px] relative mt-5 cursor-pointer filter hover:drop-shadow-[0_0_0.1rem_rgba(124,6,226,0.874)] transition-all active:drop-shadow-[0_0_0.2rem_rgba(124,6,226,0.874)]'
+              >
+                <img className='w-full h-full' src='/Buttons/Button.png' />
+                <span className='absolute flex h-full w-full justify-center items-center top-0 left-0 text-[18px] '>
+                  Create Room Now
+                </span>
+              </div>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

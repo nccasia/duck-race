@@ -5,12 +5,11 @@ import { Room } from "@/interface/room/Room";
 import { useSocket } from "@/providers/SocketProvider";
 import useRoomStore from "@/stores/roomStore";
 import useUserStore from "@/stores/userStore";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { toast } from "react-toastify";
 
 const ModalCreateRoom = () => {
-  const [openModalCreateRoom, setOpenModalCreateRoom] = useState(false);
-  const { createRoomData, setCreateRoomData, resetCreateRoomData } = useRoomStore();
+  const { createRoomData, setCreateRoomData, resetCreateRoomData, openModalCreateRoom, setOpenModalCreateRoom } = useRoomStore();
   const { currentUser } = useUserStore();
   const socket = useSocket();
   const handleChangeValue = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
@@ -59,7 +58,7 @@ const ModalCreateRoom = () => {
       socket.off(SocketEvents.ON.CREATE_ROOM_SUCCESS);
       socket.off(SocketEvents.ON.CREATE_ROOM_FAILED);
     };
-  }, [currentUser.id, resetCreateRoomData, socket]);
+  }, [currentUser.id, handleOpenModalCreateRoom, resetCreateRoomData, socket]);
 
   return (
     <Dialog open={openModalCreateRoom} onOpenChange={handleOpenModalCreateRoom}>

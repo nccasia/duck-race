@@ -19,6 +19,7 @@ interface RoomState {
   tabs: string;
   openModalShowRank: boolean;
   openModalShowResult: boolean;
+  openModalCreateRoom: boolean;
 
   setCreateRoomData: (data: ICreateRoomData) => void;
   resetCreateRoomData: () => void;
@@ -36,6 +37,7 @@ interface RoomState {
   setTabs: (tabs: string) => void;
   setOpenModalShowRank: (openModalShowRank: boolean) => void;
   setOpenModalShowResult: (openModalShowResult: boolean) => void;
+  setOpenModalCreateRoom: (openModalCreateRoom: boolean) => void;
 }
 
 const useRoomStore = create<RoomState>((set) => ({
@@ -57,6 +59,7 @@ const useRoomStore = create<RoomState>((set) => ({
   tabs: "list-user",
   openModalShowRank: false,
   openModalShowResult: false,
+  openModalCreateRoom: false,
 
   setCreateRoomData: (data: ICreateRoomData) => set({ createRoomData: data }),
   resetCreateRoomData: () => set({ createRoomData: { roomName: "", roomBet: 1 } }),
@@ -74,6 +77,7 @@ const useRoomStore = create<RoomState>((set) => ({
   setTabs: (tabs: string) => set({ tabs }),
   setOpenModalShowRank: (openModalShowRank: boolean) => set({ openModalShowRank }),
   setOpenModalShowResult: (openModalShowResult: boolean) => set({ openModalShowResult }),
+  setOpenModalCreateRoom: (openModalCreateRoom: boolean) => set({ openModalCreateRoom }),
 }));
 
 export default useRoomStore;
