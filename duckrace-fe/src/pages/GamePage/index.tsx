@@ -1,25 +1,25 @@
+import { SocketEvents } from "@/constants/SocketEvents";
 import { AppResponse } from "@/interface/app/AppResponse";
 import { BettorOfDucks, DuckPicked, IGame } from "@/interface/game/Game";
-import { useSocket } from "@/providers/SocketProvider";
-import useGameStore from "@/stores/gameStore";
-import { useEffect, useRef, useState } from "react";
-import ListPlayer from "./ListPlayer";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { SocketEvents } from "@/constants/SocketEvents";
-import ModalUser from "./ModalShowUser";
-import { ROUTES } from "@/routes/path";
-import CountdownTime from "./components/CountdownTime";
-import useUserStore from "@/stores/userStore";
-import ModalShowResult from "./ModalShowResult";
-import ModalSetup from "./ModalSetup";
-import { MezonAppEvent, MezonWebViewEvent } from "@/types/webview";
 import { IDuck, IMezonClan, IMezonUser, Room } from "@/interface/room/Room";
-import useRoomStore from "@/stores/roomStore";
-import ModalBet from "./ModalBet";
-import { toast } from "react-toastify";
-import ModalShowRank from "./ModalShowRank";
-import ModalRoomInfomation from "./ModalRoomInfomation";
 import { User } from "@/interface/user/User";
+import { useSocket } from "@/providers/SocketProvider";
+import { ROUTES } from "@/routes/path";
+import useGameStore from "@/stores/gameStore";
+import useRoomStore from "@/stores/roomStore";
+import useUserStore from "@/stores/userStore";
+import { MezonAppEvent, MezonWebViewEvent } from "@/types/webview";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import CountdownTime from "./components/CountdownTime";
+import ListPlayer from "./ListPlayer";
+import ModalBet from "./ModalBet";
+import ModalRoomInfomation from "./ModalRoomInfomation";
+import ModalSetup from "./ModalSetup";
+import ModalShowRank from "./ModalShowRank";
+import ModalShowResult from "./ModalShowResult";
+import ModalUser from "./ModalShowUser";
 
 const GamePage = () => {
   const socket = useSocket();
@@ -174,11 +174,20 @@ const GamePage = () => {
 
   useEffect(() => {
     if (!socket || !gameId) return;
-    socket.on(SocketEvents.ON.LEFT_ROOM_SUCCESS, () => {
+    socket.on(SocketEvents.ON.LEFT_ROOM_SUCCESS, (data) => {
       setCurrentGame(null);
       setListDucks([]);
       setTotalDucks(0);
       navigate(ROUTES.ROOM);
+
+      console.log("left room data", data);
+      window.Mezon.WebView?.postEvent(
+        "LEAVE_ROOM" as MezonWebViewEvent,
+        {
+          roomId: (data.data as Room).roomId,
+        },
+        () => {}
+      );
     });
 
     socket.on(

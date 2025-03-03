@@ -1,15 +1,16 @@
-import { useSocket } from "@/providers/SocketProvider";
-import ModalCreateRoom from "./ModalCreateRoom";
-import RoomItem from "./RoomItem";
-import { useEffect } from "react";
 import { SocketEvents } from "@/constants/SocketEvents";
 import { AppResponse } from "@/interface/app/AppResponse";
 import { Room } from "@/interface/room/Room";
+import { useSocket } from "@/providers/SocketProvider";
+import { ROUTES } from "@/routes/path";
 import useRoomStore from "@/stores/roomStore";
 import useUserStore from "@/stores/userStore";
+import { MezonWebViewEvent } from "@/types/webview";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ROUTES } from "@/routes/path";
 import { toast } from "react-toastify";
+import ModalCreateRoom from "./ModalCreateRoom";
+import RoomItem from "./RoomItem";
 
 const RoomPage = () => {
   const socket = useSocket();
@@ -31,6 +32,13 @@ const RoomPage = () => {
     });
     socket.on(SocketEvents.ON.JOIN_ROOM_SUCCESS, (data: AppResponse<Room>) => {
       console.log("Join room success", data);
+      window.Mezon.WebView?.postEvent(
+        "JOIN_ROOM" as MezonWebViewEvent,
+        {
+          roomId: (data.data as Room).roomId,
+        },
+        () => {}
+      );
       navigate(`${ROUTES.ROOM_DETAIL.replace(":roomId", (data.data as Room).roomId)}?gameId=${(data.data as Room).currentGame}`);
     });
     socket.on(SocketEvents.ON.JOIN_ROOM_FAILED, (data: AppResponse<Room>) => {
