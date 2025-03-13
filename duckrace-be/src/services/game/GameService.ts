@@ -1,14 +1,14 @@
-import { IGameService } from "@/interfaces/IGameService";
-import logger from "@/helpers/logger";
-import { generateId } from "@/utils/generateId";
 import { BettorOfDucks, Game } from "@/entities/Game";
-import { ICreateGameSubmitDTO } from "@/models/games/ICreateGameSubmitDTO";
-import { IBetForDuckDTO } from "@/models/games/IBetForDuckDTO";
+import logger from "@/helpers/logger";
+import { IGameService } from "@/interfaces/IGameService";
 import { IRoomService } from "@/interfaces/IRoomService";
-import RoomService from "../room/RoomService";
 import { IUserService } from "@/interfaces/IUserService";
-import UserService from "../user/UserService";
+import { IBetForDuckDTO } from "@/models/games/IBetForDuckDTO";
 import { IConfirmBet } from "@/models/games/IConfirmBet";
+import { ICreateGameSubmitDTO } from "@/models/games/ICreateGameSubmitDTO";
+import { generateId } from "@/utils/generateId";
+import RoomService from "../room/RoomService";
+import UserService from "../user/UserService";
 
 class GameService implements IGameService {
   private static instance: GameService;
@@ -228,11 +228,11 @@ class GameService implements IGameService {
       };
     }
     const API_KEY = process.env.API_KEY ?? "";
-    const APP_ID = process.env.APP_ID ?? "";
+    const APP_ID_FOR_BET = process.env.APP_ID_FOR_BET ?? "";
     const url = process.env.REWARD_URL ?? "";
     const headers = {
       apiKey: API_KEY,
-      appId: APP_ID,
+      appId: APP_ID_FOR_BET,
       "Content-Type": "application/json",
     };
 

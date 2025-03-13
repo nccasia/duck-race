@@ -41,7 +41,7 @@ const GetUserProvider = ({ children }: GetUserProviderProps) => {
     });
     window.Mezon.WebView?.postEvent(
       "SEND_BOT_ID" as MezonWebViewEvent,
-      { appId: import.meta.env.VITE_HASH_APP_ID ?? "" },
+      { appId: import.meta.env.VITE_APP_ID_FOR_HASH ?? "" },
       () => {}
     );
     window.Mezon.WebView?.onEvent("USER_HASH_INFO" as MezonAppEvent, async (_, userHashData: any) => {

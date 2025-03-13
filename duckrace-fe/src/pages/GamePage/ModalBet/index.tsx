@@ -43,14 +43,14 @@ const ModalBet = () => {
     if (!socket) return;
     const amount = listDuckPicked.length * (currentRoom?.roomInfo.roomBet ?? 1);
     const dataEmit = {
-      receiver_id: import.meta.env.VITE_BET_BOT_ID,
+      receiver_id: import.meta.env.VITE_BOT_ID_FOR_BET,
       amount,
       note: `Đã đặt cược ${amount} token khi chơi game duckrace!`,
       sender_id: currentUser.id,
       sender_name: currentUser.name,
       extra_attribute: JSON.stringify({
         sessionId: currentRoom?.currentGame,
-        appId: import.meta.env.VITE_BET_APP_ID,
+        appId: import.meta.env.VITE_APP_ID_FOR_BET,
       }),
     };
     window.Mezon.WebView?.postEvent("SEND_TOKEN" as MezonWebViewEvent, dataEmit, () => {});
