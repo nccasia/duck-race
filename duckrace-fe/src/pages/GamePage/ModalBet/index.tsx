@@ -1,12 +1,12 @@
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SocketEvents } from "@/constants/SocketEvents";
+import { useSocket } from "@/providers/SocketProvider";
 import useGameStore from "@/stores/gameStore";
 import useRoomStore from "@/stores/roomStore";
-import { useEffect, useState } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useSocket } from "@/providers/SocketProvider";
-import { SocketEvents } from "@/constants/SocketEvents";
 import useUserStore from "@/stores/userStore";
 import { MezonWebViewEvent } from "@/types/webview";
+import { useEffect, useState } from "react";
 const ModalBet = () => {
   const [timeCountDown, setTimeCountDown] = useState<number | null>(30);
   const [isActive, setIsActive] = useState(false);
@@ -43,14 +43,14 @@ const ModalBet = () => {
     if (!socket) return;
     const amount = listDuckPicked.length * (currentRoom?.roomInfo.roomBet ?? 1);
     const dataEmit = {
-      receiver_id: import.meta.env.VITE_BOT_ID,
+      receiver_id: import.meta.env.VITE_BET_BOT_ID,
       amount,
       note: `Đã đặt cược ${amount} token khi chơi game duckrace!`,
       sender_id: currentUser.id,
       sender_name: currentUser.name,
       extra_attribute: JSON.stringify({
         sessionId: currentRoom?.currentGame,
-        appId: import.meta.env.VITE_APP_ID,
+        appId: import.meta.env.VITE_BET_APP_ID,
       }),
     };
     window.Mezon.WebView?.postEvent("SEND_TOKEN" as MezonWebViewEvent, dataEmit, () => {});
@@ -58,7 +58,6 @@ const ModalBet = () => {
 
   useEffect(() => {
     if (!socket || !currentRoom?.currentGame) return;
-    console.log("Emitting get game bettors...");
     socket.emit(SocketEvents.EMIT.GET_GAME_BETTORS, currentRoom?.currentGame);
   }, [currentRoom?.currentGame, openModalBet, socket]);
 

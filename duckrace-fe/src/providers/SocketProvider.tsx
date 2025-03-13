@@ -2,6 +2,7 @@ import { SocketEvents } from "@/constants/SocketEvents";
 import useUserStore from "@/stores/userStore";
 import { DefaultEventsMap } from "@socket.io/component-emitter";
 import { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
 import { io, Socket } from "socket.io-client";
 
 const SocketContext = createContext<Socket<DefaultEventsMap, DefaultEventsMap> | null>(null);
@@ -15,9 +16,10 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [socketInitialized, setSocketInitialized] = useState(false);
 
   const currentUser = useUserStore((state) => state.currentUser);
+  const userHashInfo = useUserStore((state) => state.userHashInfo);
   const setCurrentUser = useUserStore((state) => state.setCurrentUser);
   useEffect(() => {
-    if (currentUser.id && !socketInitialized) {
+    if (currentUser.id && !socketInitialized && userHashInfo) {
       socket.current = io(import.meta.env.VITE_BACKEND_URL, {
         withCredentials: true,
         query: {
@@ -27,14 +29,17 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
       socket.current.on("connect", () => {
         console.log("Connected to socket");
-        socket.current?.emit(SocketEvents.EMIT.USER_VISIT_GAME, currentUser);
+        socket.current?.emit(SocketEvents.EMIT.USER_VISIT_GAME, {
+          user: currentUser,
+          hashKey: userHashInfo.hash,
+        });
       });
 
-      socket.current.on(SocketEvents.ON.USER_CONNECTED, () => {
-        setCurrentUser({
-          ...currentUser,
-          isConnected: true,
-        });
+      // socket.current.on(SocketEvents.ON.USER_VISIT_GAME_SUCCESS, (data) => {
+      //   console.log("User visit game success --------------------------------------------------------", data);
+      // });
+      socket.current.on(SocketEvents.ON.USER_VISIT_GAME_FAILED, (data) => {
+        toast.error(data?.errorMessage);
       });
 
       setSocketInitialized(true);
@@ -44,7 +49,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         setSocketInitialized(false);
       };
     }
-  }, [currentUser.id, setCurrentUser]);
+  }, [currentUser.id, setCurrentUser, userHashInfo]);
 
   return <SocketContext.Provider value={socket.current}>{children}</SocketContext.Provider>;
 };

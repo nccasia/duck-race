@@ -1,5 +1,6 @@
 import logger from "@/helpers/logger";
 import { IUserService } from "@/interfaces/IUserService";
+import { Hasher } from "@/utils/hash";
 class UserService implements IUserService {
   private static instance: UserService;
   private listUsers: Array<User> = [];
@@ -14,6 +15,41 @@ class UserService implements IUserService {
   }
   public getListUsers(): Array<User> {
     return this.listUsers;
+  }
+
+  public async hashUser(user: User, hashKey: string): Promise<ServiceResponse> {
+    try {
+      const preHashData = {
+        userid: user.id,
+        username: user.userName,
+      };
+      const dataKeys = Object.keys(preHashData).sort();
+      const hashParams = dataKeys.map((key) => `${key}=${preHashData[key]}`).join("\n");
+
+      const botToken = process.env.MEZON_APP_SECRET;
+      const secretKey = Hasher.HMAC_SHA256(botToken, "WebAppData");
+      const hashedData = Hasher.HEX(Hasher.HMAC_SHA256(secretKey, hashParams));
+
+      if (hashedData !== hashKey) {
+        return {
+          statusCode: 401,
+          isSuccess: false,
+          errorMessage: "You are not authorized with Mezon, please login and try again",
+        };
+      }
+      return {
+        statusCode: 200,
+        isSuccess: true,
+        data: user,
+      };
+    } catch (error) {
+      logger.error(error?.message);
+      return {
+        statusCode: 500,
+        isSuccess: false,
+        errorMessage: "Lỗi từ hệ thống",
+      };
+    }
   }
 
   public async addUser(user: User): Promise<ServiceResponse> {

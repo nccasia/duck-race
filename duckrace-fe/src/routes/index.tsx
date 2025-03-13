@@ -1,14 +1,15 @@
+import SoundLayout from "@/layouts/SoundLayout";
 import GamePage from "@/pages/GamePage";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { ROUTES } from "./path";
 import HomePage from "@/pages/HomePage";
 import RoomPage from "@/pages/RoomPage";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { ROUTES } from "./path";
 
 const RouteManager = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route>
+        <Route element={<SoundLayout />}>
           <Route path={ROUTES.GAME} element={<GamePage />} />
           <Route path={ROUTES.HOME} element={<HomePage />} />
           <Route path={ROUTES.ROOM} element={<RoomPage />} />

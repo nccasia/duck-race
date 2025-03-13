@@ -1,9 +1,14 @@
 export interface User {
   id?: string;
   name?: string;
-  username?: string;
+  userName: string;
   avatar?: string;
   email?: string;
   wallet?: number;
   isConnected?: boolean;
+}
+
+export interface IUserHashInfo {
+  user_id: string;
+  hash: string;
 }

@@ -1,4 +1,5 @@
 export interface IUserService {
+  hashUser(user: User, hashKey: string): Promise<ServiceResponse>;
   getListUsersAsync(): Promise<ServiceResponse>;
   getListUsers(): Array<User>;
   addUser(user: User): Promise<ServiceResponse>;

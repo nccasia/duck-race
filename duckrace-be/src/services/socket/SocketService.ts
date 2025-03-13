@@ -1,24 +1,23 @@
 import Application from "@/app";
 import { SocketEvents } from "@/constants/SocketEvent";
+import { Room } from "@/entities/Room";
+import { IGameService } from "@/interfaces/IGameService";
+import { IRoomService } from "@/interfaces/IRoomService";
 import ISocketService from "@/interfaces/ISocketService";
 import { IUserService } from "@/interfaces/IUserService";
-import { Server, Socket } from "socket.io";
-import UserService from "../user/UserService";
-import { IGameService } from "@/interfaces/IGameService";
-import GameService from "../game/GameService";
-import { Game } from "@/entities/Game";
-import { CreateRoomSubmitDTO } from "@/models/rooms/ICreateRoomSubmitDTO";
-import { IRoomService } from "@/interfaces/IRoomService";
-import RoomService from "../room/RoomService";
-import { IJoinRoomSubmitDTO } from "@/models/rooms/IJoinRoomSubmitDTO";
-import { IChangeTimeSubmitDTO } from "@/models/rooms/IChangeTimeSubmitDTO";
+import { IBetForDuckDTO } from "@/models/games/IBetForDuckDTO";
+import { ICreateGameSubmitDTO } from "@/models/games/ICreateGameSubmitDTO";
 import { IAddDuckToRoomDTO } from "@/models/rooms/IAddDuckToRoomDTO";
-import { IUpdateListDuckDTO } from "@/models/rooms/IUpdateListDuckDTO";
+import { IChangeTimeSubmitDTO } from "@/models/rooms/IChangeTimeSubmitDTO";
+import { CreateRoomSubmitDTO } from "@/models/rooms/ICreateRoomSubmitDTO";
+import { IJoinRoomSubmitDTO } from "@/models/rooms/IJoinRoomSubmitDTO";
 import { IRemoveDuckDTO } from "@/models/rooms/IRemoveDuckDTO";
 import { IStartGameSubmitDTO } from "@/models/rooms/IStartGameSubmitDTO";
-import { Room } from "@/entities/Room";
-import { ICreateGameSubmitDTO } from "@/models/games/ICreateGameSubmitDTO";
-import { IBetForDuckDTO } from "@/models/games/IBetForDuckDTO";
+import { IUpdateListDuckDTO } from "@/models/rooms/IUpdateListDuckDTO";
+import { Server, Socket } from "socket.io";
+import GameService from "../game/GameService";
+import RoomService from "../room/RoomService";
+import UserService from "../user/UserService";
 
 class SocketService implements ISocketService {
   private socketServer: Server;
@@ -40,7 +39,7 @@ class SocketService implements ISocketService {
 
   private onSocketConnect = (socket: Socket) => {
     console.log(`User ${socket.id} connected`);
-    socket.on(SocketEvents.ON.USER_VISIT_GAME, (user) => this.onUserVisitGame(socket, user));
+    socket.on(SocketEvents.ON.USER_VISIT_GAME, ({ user, hashKey }) => this.onUserVisitGame(socket, user, hashKey));
     socket.on(SocketEvents.ON.START_GAME, (data: IStartGameSubmitDTO) => this.onStartGame(socket, data));
     socket.on(SocketEvents.ON.ADD_DUCK_TO_ROOM, (data: IAddDuckToRoomDTO) => this.onAddDuckToRoom(socket, data));
     socket.on(SocketEvents.ON.UPDATE_LIST_DUCK_OF_ROOM, (data: IUpdateListDuckDTO) => this.onUpdateListDuckOfRoom(socket, data));
@@ -62,8 +61,16 @@ class SocketService implements ISocketService {
     socket.on("disconnect", () => this.onDisconnect(socket));
   };
 
-  onUserVisitGame = async (socket: Socket, user: User) => {
+  onUserVisitGame = async (socket: Socket, user: User, hashKey: string) => {
     user.socketId = socket.id;
+    const hashUserResponse = await this._userService.hashUser(user, hashKey);
+
+    if (!hashUserResponse.isSuccess) {
+      console.log(`User ${user.id} visit game failed: ${hashUserResponse.errorMessage}`);
+      socket.emit(SocketEvents.EMIT.USER_VISIT_GAME_FAILED, hashUserResponse);
+      return;
+    }
+
     const addUserResponse = await this._userService.addUser(user);
     if (addUserResponse.isSuccess) {
       console.log(`User ${user.id} visited game`);
@@ -350,7 +357,7 @@ class SocketService implements ISocketService {
   onDisconnect = async (socket: Socket) => {
     const userBySocketResponse = await this._userService.getUserBySocketId(socket.id);
     const user = userBySocketResponse.data as User;
-    this.onLeaveRoom(socket, { userId: user.id, roomId: "" });
+    this.onLeaveRoom(socket, { userId: user?.id, roomId: "" });
   };
 }
 export default SocketService;

@@ -19,14 +19,14 @@ class Duck {
   public score: Score;
   public order: number;
   public colorNumber: number;
-  role_id?: string[];
-  userChannelId?: string;
-  user?: {
+  public role_id?: string[];
+  public userChannelId?: string;
+  public user?: {
     display_name: string;
     user_name: string;
     avatar_url: string;
   };
-  isSelected?: boolean;
+  public isSelected?: boolean;
 }
 
 class Room {
@@ -45,4 +45,4 @@ class Room {
   public isPlaying = false;
 }
 
-export { Room, RoomInfo, Duck, Score };
+export { Duck, Room, RoomInfo, Score };

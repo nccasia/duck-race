@@ -1,12 +1,12 @@
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SocketEvents } from "@/constants/SocketEvents";
+import { useSocket } from "@/providers/SocketProvider";
 import useGameStore from "@/stores/gameStore";
+import useRoomStore from "@/stores/roomStore";
 import AddUserTab from "./AddUserTab";
 import ListUserTab from "./ListUserTab";
-import { useSocket } from "@/providers/SocketProvider";
-import { SocketEvents } from "@/constants/SocketEvents";
 import MezonUserTab from "./MezonUserTab";
-import useRoomStore from "@/stores/roomStore";
 
 const ModalUser = () => {
   const { gameStatus } = useGameStore();
@@ -27,9 +27,18 @@ const ModalUser = () => {
   const handleSaveListUser = () => {
     if (!socket) return;
     const listUser = listMezonUser.filter((user) => user.isSelected);
+    const listDucks = listUser.map((user) => ({
+      ...user,
+      score: {
+        oldScore: 0,
+        newScore: 0,
+        totalScore: 0,
+      },
+      name: user.user.display_name,
+    }));
     socket.emit(SocketEvents.EMIT.UPDATE_LIST_DUCK_OF_ROOM, {
       roomId: currentRoom?.roomId,
-      ducks: listUser,
+      ducks: listDucks,
     });
   };
 
