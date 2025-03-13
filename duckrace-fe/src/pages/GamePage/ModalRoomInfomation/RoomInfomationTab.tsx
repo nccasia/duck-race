@@ -18,7 +18,7 @@ const RoomInformationTab = () => {
       </div>
       <div className='flex justify-between items-center'>
         <span>Owner</span>
-        <span>{currentRoom?.owner?.username}</span>
+        <span>{currentRoom?.owner?.userName}</span>
       </div>
       <div className='flex justify-between items-center'>
         <span>Room Bet</span>

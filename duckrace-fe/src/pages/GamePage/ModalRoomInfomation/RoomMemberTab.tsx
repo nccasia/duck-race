@@ -10,7 +10,7 @@ const RoomMemberTab = () => {
             <div className=' flex items-center font-titan text-gray-700 text-[15px] gap-2 '>
               <img className='w-[35px] h-[35px] rounded-full' src={member.avatar} />
               <div className='ml-2 flex flex-col justify-center items-start flex-1 h-full w-full'>
-                <span className=''>{member.username}</span>
+                <span className=''>{member.userName}</span>
                 <span className='text-[12px] font-light text-gray-500'>{member.email}</span>
               </div>
             </div>

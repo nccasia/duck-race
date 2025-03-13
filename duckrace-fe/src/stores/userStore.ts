@@ -18,7 +18,7 @@ const useUserStore = create<UserState>((set) => ({
   currentUser: {
     id: "",
     name: "",
-    username: "",
+    userName: "",
     avatar: "",
     email: "",
     wallet: 0,
