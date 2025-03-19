@@ -39,7 +39,7 @@ class SocketService implements ISocketService {
 
   private onSocketConnect = (socket: Socket) => {
     console.log(`User ${socket.id} connected`);
-    socket.on(SocketEvents.ON.USER_VISIT_GAME, ({ user, hashKey }) => this.onUserVisitGame(socket, user, hashKey));
+    socket.on(SocketEvents.ON.USER_VISIT_GAME, ({ walletBalance, hashData }) => this.onUserVisitGame(socket, walletBalance, hashData));
     socket.on(SocketEvents.ON.START_GAME, (data: IStartGameSubmitDTO) => this.onStartGame(socket, data));
     socket.on(SocketEvents.ON.ADD_DUCK_TO_ROOM, (data: IAddDuckToRoomDTO) => this.onAddDuckToRoom(socket, data));
     socket.on(SocketEvents.ON.UPDATE_LIST_DUCK_OF_ROOM, (data: IUpdateListDuckDTO) => this.onUpdateListDuckOfRoom(socket, data));
@@ -61,22 +61,28 @@ class SocketService implements ISocketService {
     socket.on("disconnect", () => this.onDisconnect(socket));
   };
 
-  onUserVisitGame = async (socket: Socket, user: User, hashKey: string) => {
-    user.socketId = socket.id;
-    const hashUserResponse = await this._userService.hashUser(user, hashKey);
+  onUserVisitGame = async (socket: Socket, walletBalance: number, hashData: string) => {
+    const hashUserResponse = await this._userService.verifyHashUser(hashData);
 
     if (!hashUserResponse.isSuccess) {
-      console.log(`User ${user.id} visit game failed: ${hashUserResponse.errorMessage}`);
       socket.emit(SocketEvents.EMIT.USER_VISIT_GAME_FAILED, hashUserResponse);
       return;
     }
 
-    const addUserResponse = await this._userService.addUser(user);
+    const mezonUser = hashUserResponse?.data as MezonUser;
+    const socketUser: User = {
+      id: mezonUser.id,
+      socketId: socket.id,
+      playerName: mezonUser.display_name,
+      userName: mezonUser.username,
+      wallet: walletBalance,
+    }
+    const addUserResponse = await this._userService.addUser(socketUser);
     if (addUserResponse.isSuccess) {
-      console.log(`User ${user.id} visited game`);
-      socket.emit(SocketEvents.EMIT.USER_VISIT_GAME_SUCCESS, user);
+      console.log(`User ${mezonUser.mezon_id} visited game`);
+      socket.emit(SocketEvents.EMIT.USER_VISIT_GAME_SUCCESS, socketUser);
     } else {
-      console.log(`User ${user.id} visit game failed: ${addUserResponse.errorMessage}`);
+      console.log(`User ${mezonUser.mezon_id} visit game failed: ${addUserResponse.errorMessage}`);
       socket.emit(SocketEvents.EMIT.USER_VISIT_GAME_FAILED, addUserResponse);
     }
   };

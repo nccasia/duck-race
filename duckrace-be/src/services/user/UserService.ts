@@ -1,6 +1,9 @@
 import logger from "@/helpers/logger";
 import { IUserService } from "@/interfaces/IUserService";
 import { Hasher } from "@/utils/hash";
+import { StatusCodes } from "http-status-codes";
+import { Base64 } from "js-base64";
+import * as queryString from "query-string";
 class UserService implements IUserService {
   private static instance: UserService;
   private listUsers: Array<User> = [];
@@ -17,20 +20,22 @@ class UserService implements IUserService {
     return this.listUsers;
   }
 
-  public async hashUser(user: User, hashKey: string): Promise<ServiceResponse> {
+  public async verifyHashUser(hashData: string): Promise<ServiceResponse> {
     try {
-      const preHashData = {
-        userid: user.id,
-        username: user.userName,
-      };
-      const dataKeys = Object.keys(preHashData).sort();
-      const hashParams = dataKeys.map((key) => `${key}=${preHashData[key]}`).join("\n");
+      const rawHashData = Base64.decode(hashData);
+      const mezonEventData: any = queryString.parse(rawHashData, {
+        sort: false,
+      });
+
+      const { hash, ...hashParams } = mezonEventData as HashData;
+      const mezonUser = JSON.parse(hashParams?.user) as MezonUser;
+      const hashParamsString = queryString.stringify(hashParams, { sort: false });
 
       const botToken = process.env.MEZON_APP_SECRET;
       const secretKey = Hasher.HMAC_SHA256(botToken, "WebAppData");
-      const hashedData = Hasher.HEX(Hasher.HMAC_SHA256(secretKey, hashParams));
+      const hashedData = Hasher.HEX(Hasher.HMAC_SHA256(secretKey, hashParamsString));
 
-      if (hashedData !== hashKey) {
+      if (hashedData !== hash) {
         return {
           statusCode: 401,
           isSuccess: false,
@@ -38,9 +43,9 @@ class UserService implements IUserService {
         };
       }
       return {
-        statusCode: 200,
+        statusCode: StatusCodes.OK,
         isSuccess: true,
-        data: user,
+        data: mezonUser,
       };
     } catch (error) {
       logger.error(error?.message);

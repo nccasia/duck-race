@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IUserHashInfo } from "@/interface/user/User";
 import useUserStore from "@/stores/userStore";
 import { MezonAppEvent, MezonWebViewEvent } from "@/types/webview";
+import { Base64 } from "js-base64";
 import { useEffect } from "react";
 
 interface GetUserProviderProps {
@@ -44,8 +44,10 @@ const GetUserProvider = ({ children }: GetUserProviderProps) => {
       { appId: import.meta.env.VITE_APP_ID_FOR_HASH ?? "" },
       () => {}
     );
-    window.Mezon.WebView?.onEvent("USER_HASH_INFO" as MezonAppEvent, async (_, userHashData: any) => {
-      setUserHashInfo(userHashData.message as IUserHashInfo);
+    window.Mezon.WebView?.onEvent("USER_HASH_INFO" as MezonAppEvent, async (_, data: any) => {
+      const mezonEventData: string | null | undefined = data?.message?.web_app_data;
+      if (!mezonEventData) return;
+      setUserHashInfo({ hashData: Base64.encode(mezonEventData) });
     });
     // const user = fetchCurrentUser;
     // console.log("user", user);
