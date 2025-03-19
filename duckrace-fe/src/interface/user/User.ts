@@ -9,6 +9,5 @@ export interface User {
 }
 
 export interface IUserHashInfo {
-  user_id: string;
-  hash: string;
+  hashData: string;
 }

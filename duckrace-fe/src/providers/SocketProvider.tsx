@@ -30,8 +30,8 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       socket.current.on("connect", () => {
         console.log("Connected to socket");
         socket.current?.emit(SocketEvents.EMIT.USER_VISIT_GAME, {
-          user: currentUser,
-          hashKey: userHashInfo.hash,
+          walletBalance: currentUser.wallet,
+          hashData: userHashInfo.hashData,
         });
       });
 
@@ -49,6 +49,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         setSocketInitialized(false);
       };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser.id, setCurrentUser, userHashInfo]);
 
   return <SocketContext.Provider value={socket.current}>{children}</SocketContext.Provider>;

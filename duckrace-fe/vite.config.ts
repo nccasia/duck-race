@@ -10,9 +10,7 @@ export default defineConfig({
     },
   },
   server: {
-    host: "0.0.0.0", // Cho phép truy cập từ bên ngoài
-    cors: {
-      origin: "https://duckrace.vncsoft.com", // Chỉ cho phép domain này truy cập
-    },
+    host: true,
+    cors: true,
   },
 });
