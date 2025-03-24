@@ -29,7 +29,7 @@ class UserService implements IUserService {
 
       const { hash, ...hashParams } = mezonEventData as HashData;
       const mezonUser = JSON.parse(hashParams?.user) as MezonUser;
-      const hashParamsString = queryString.stringify(hashParams, { sort: false });
+      const hashParamsString = rawHashData.split("&hash=")[0];
 
       const botToken = process.env.MEZON_APP_TOKEN || "";
       const secretKey = Hasher.HMAC_SHA256(botToken, "WebAppData");
