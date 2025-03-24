@@ -1,8 +1,8 @@
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
 import RoomInformationTab from "./RoomInfomationTab";
 import RoomMemberTab from "./RoomMemberTab";
-import { useState } from "react";
 const ModalRoomInfomation = () => {
   const [tabs, setTabs] = useState("room-infomation");
   return (
@@ -31,7 +31,10 @@ const ModalRoomInfomation = () => {
             >
               <RoomInformationTab />
             </TabsContent>
-            <TabsContent className='h-[calc(100%-70px)] p-2 bg-[#fdfdfd54] rounded-lg select-none' value='room-member'>
+            <TabsContent
+              className='h-[calc(100%-70px)] overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-red-500 [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-track]:bg-gray-200 p-2 bg-[#fdfdfd54] rounded-lg select-none'
+              value='room-member'
+            >
               <RoomMemberTab />
             </TabsContent>
           </Tabs>
