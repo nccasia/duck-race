@@ -9,4 +9,5 @@ export interface IGameService {
   betForDuck(betData: IBetForDuckDTO): Promise<ServiceResponse>;
   confirmBetForDuck(dataConfirm: IConfirmBet): Promise<ServiceResponse>;
   endGame(gameId: string): Promise<ServiceResponse>;
+  rewardToken(winners: string[], winBet: number): Promise<ServiceResponse>;
 }

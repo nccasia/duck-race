@@ -2,6 +2,7 @@ import Application from "@/app";
 import { SocketEvents } from "@/constants/SocketEvent";
 import { Room } from "@/entities/Room";
 import { IGameService } from "@/interfaces/IGameService";
+import { IMezonClientService } from "@/interfaces/IMezonClientService";
 import { IRoomService } from "@/interfaces/IRoomService";
 import ISocketService from "@/interfaces/ISocketService";
 import { IUserService } from "@/interfaces/IUserService";
@@ -16,6 +17,7 @@ import { IStartGameSubmitDTO } from "@/models/rooms/IStartGameSubmitDTO";
 import { IUpdateListDuckDTO } from "@/models/rooms/IUpdateListDuckDTO";
 import { Server, Socket } from "socket.io";
 import GameService from "../game/GameService";
+import MezonClientService from "../mezon-client/MezonClientService";
 import RoomService from "../room/RoomService";
 import UserService from "../user/UserService";
 
@@ -24,22 +26,27 @@ class SocketService implements ISocketService {
   private _userService: IUserService;
   private _gameService: IGameService;
   private _roomService: IRoomService;
+  private _mezonClientService: IMezonClientService;
   constructor(Application: Application) {
     this.socketServer = Application.socketServer;
     this._userService = UserService.getInstance();
     this._gameService = GameService.getInstance();
     this._roomService = RoomService.getInstance();
+    this._mezonClientService = MezonClientService.getInstance();
     this.initGameService();
   }
 
   private initGameService = () => {
+    this._mezonClientService.authenticate();
     this.socketServer.on("connection", this.onSocketConnect);
     // this.initScheduler();
   };
 
   private onSocketConnect = (socket: Socket) => {
     console.log(`User ${socket.id} connected`);
-    socket.on(SocketEvents.ON.USER_VISIT_GAME, ({ walletBalance, hashData }) => this.onUserVisitGame(socket, walletBalance, hashData));
+    socket.on(SocketEvents.ON.USER_VISIT_GAME, ({ walletBalance, hashData }) =>
+      this.onUserVisitGame(socket, walletBalance, hashData)
+    );
     socket.on(SocketEvents.ON.START_GAME, (data: IStartGameSubmitDTO) => this.onStartGame(socket, data));
     socket.on(SocketEvents.ON.ADD_DUCK_TO_ROOM, (data: IAddDuckToRoomDTO) => this.onAddDuckToRoom(socket, data));
     socket.on(SocketEvents.ON.UPDATE_LIST_DUCK_OF_ROOM, (data: IUpdateListDuckDTO) => this.onUpdateListDuckOfRoom(socket, data));
@@ -76,7 +83,7 @@ class SocketService implements ISocketService {
       playerName: mezonUser.display_name,
       userName: mezonUser.username,
       wallet: walletBalance,
-    }
+    };
     const addUserResponse = await this._userService.addUser(socketUser);
     if (addUserResponse.isSuccess) {
       console.log(`User ${mezonUser.mezon_id} visited game`);

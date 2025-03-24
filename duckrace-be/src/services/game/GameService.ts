@@ -1,12 +1,14 @@
 import { BettorOfDucks, Game } from "@/entities/Game";
 import logger from "@/helpers/logger";
 import { IGameService } from "@/interfaces/IGameService";
+import { IMezonClientService } from "@/interfaces/IMezonClientService";
 import { IRoomService } from "@/interfaces/IRoomService";
 import { IUserService } from "@/interfaces/IUserService";
 import { IBetForDuckDTO } from "@/models/games/IBetForDuckDTO";
 import { IConfirmBet } from "@/models/games/IConfirmBet";
 import { ICreateGameSubmitDTO } from "@/models/games/ICreateGameSubmitDTO";
 import { generateId } from "@/utils/generateId";
+import MezonClientService from "../mezon-client/MezonClientService";
 import RoomService from "../room/RoomService";
 import UserService from "../user/UserService";
 
@@ -15,9 +17,12 @@ class GameService implements IGameService {
   private listGame: Game[] = [];
   private _roomService: IRoomService;
   private _userService: IUserService;
-  private constructor() {
+  private _mezonClientService: IMezonClientService;
+
+  constructor() {
     this._roomService = RoomService.getInstance();
     this._userService = UserService.getInstance();
+    this._mezonClientService = MezonClientService.getInstance();
   }
 
   public static getInstance(): GameService {
@@ -219,6 +224,21 @@ class GameService implements IGameService {
     }
   }
 
+  public async rewardToken(winners: string[], winBet: number): Promise<ServiceResponse> {
+    try {
+      const data = await this._mezonClientService.rewardTokenForUser(winners, winBet);
+      console.log("data", data);
+      return data;
+    } catch (error) {
+      console.error("Error:", error);
+      return {
+        statusCode: 500,
+        isSuccess: false,
+        errorMessage: " rewardBetForDuck error",
+      };
+    }
+  }
+
   private async rewardBetForDuck(currentGameId: string, winners: string[], winBet: number): Promise<ServiceResponse> {
     if (!winners || winners.length === 0) {
       return {
@@ -228,11 +248,11 @@ class GameService implements IGameService {
       };
     }
     const API_KEY = process.env.API_KEY ?? "";
-    const APP_ID_FOR_BET = process.env.APP_ID_FOR_BET ?? "";
+    const MEZON_APP_ID = process.env.MEZON_APP_ID ?? "";
     const url = process.env.REWARD_URL ?? "";
     const headers = {
       apiKey: API_KEY,
-      appId: APP_ID_FOR_BET,
+      appId: MEZON_APP_ID,
       "Content-Type": "application/json",
     };
 
@@ -299,9 +319,9 @@ class GameService implements IGameService {
       const listWinner = game.gameBettors.filter((bettor) => bettor.duckId === duckWinner);
       game.winners = listWinner.map((winner) => winner.userId);
       if (game.winners.length > 0) {
-        await this.rewardBetForDuck(gameId, game.winners, game.totalBet / game.winners.length);
+        await this._mezonClientService.rewardTokenForUser(game.winners, game.totalBet / game.winners.length);
       } else {
-        await this.rewardBetForDuck(gameId, game.bettors, game.totalBet / game.bettors.length);
+        await this._mezonClientService.rewardTokenForUser(game.bettors, game.totalBet / game.bettors.length);
       }
       return {
         statusCode: 200,

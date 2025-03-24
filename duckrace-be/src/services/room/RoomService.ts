@@ -109,7 +109,6 @@ class RoomService implements IRoomService {
     // Implementation here
     try {
       const room = this.listRooms.find((room) => room.roomId === roomId);
-      console.log(room);
       if (!room) {
         return {
           statusCode: 404,
@@ -376,9 +375,7 @@ class RoomService implements IRoomService {
           errorMessage: "Room is not found",
         };
       }
-      console.log("data", addDuckData);
       const duckNumber = room.ducks.length;
-      console.log("duckNumber", duckNumber);
       addDuckData.ducks.forEach((duck, index) => {
         if (duck?.trim() !== "") {
           const colorNumber = Math.floor(Math.random() * 10) + 1;
@@ -391,7 +388,6 @@ class RoomService implements IRoomService {
           });
         }
       });
-      console.log("room", room);
       room.totalDuck = room.ducks.length;
       return {
         statusCode: 200,
@@ -410,7 +406,6 @@ class RoomService implements IRoomService {
 
   public async removeDuckFromRoom(removeDuckData: IRemoveDuckDTO): Promise<ServiceResponse> {
     try {
-      console.log("data", removeDuckData);
       const room = this.listRooms.find((room) => room.roomId === removeDuckData.roomId);
       if (!room) {
         return {
@@ -499,7 +494,6 @@ class RoomService implements IRoomService {
 
   public async resetGame(resetGameData: IStartGameSubmitDTO): Promise<ServiceResponse> {
     try {
-      console.log("resetGameData", resetGameData);
       const currentRoom = this.listRooms.find((room) => room.roomId === resetGameData.roomId);
       if (!currentRoom) {
         return {

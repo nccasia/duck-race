@@ -1,3 +1,4 @@
+import Loading from "@/components/Loading";
 import { SocketEvents } from "@/constants/SocketEvents";
 import { AppResponse } from "@/interface/app/AppResponse";
 import { BettorOfDucks, DuckPicked, IGame } from "@/interface/game/Game";
@@ -61,7 +62,7 @@ const GamePage = () => {
   } = useRoomStore();
   const { currentUser } = useUserStore();
   const [listDuckToShow, setListDuckToShow] = useState<IDuck[]>([]);
-
+  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     if (!socket || !roomId) return;
     socket.emit(SocketEvents.EMIT.GET_ROOM_INFO, roomId);
@@ -369,6 +370,15 @@ const GamePage = () => {
     };
   }, [currentRoom?.currentGame, currentRoom?.roomId, currentRoom?.roomInfo.roomBet, currentUser.id, setIsConfirmedBet, socket]);
 
+  useEffect(() => {
+    setIsLoading(true);
+    const timeOut = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+    return () => {
+      clearTimeout(timeOut);
+    };
+  }, []);
   const countdownRef = useRef<{ startCountdown: () => void; resetCountdown: () => void }>(null);
 
   const handleStartGame = () => {
@@ -418,6 +428,7 @@ const GamePage = () => {
   return (
     <div className='h-full w-full bg-[#21107266] rounded-lg relative'>
       <ListPlayer />
+      {isLoading && <Loading />}
       <div className='absolute top-2 left-0 w-full flex justify-center items-center'>
         <div
           onClick={handleOutGame}
