@@ -21,7 +21,7 @@ export interface IDuck {
   userChannelId?: string;
   user?: {
     display_name: string;
-    user_name: string;
+    username: string;
     avatar_url: string;
   };
   isSelected?: boolean;
@@ -63,7 +63,7 @@ export interface IMezonUser {
   userChannelId: string;
   user: {
     display_name: string;
-    user_name: string;
+    username: string;
     avatar_url: string;
   };
   isSelected: boolean;

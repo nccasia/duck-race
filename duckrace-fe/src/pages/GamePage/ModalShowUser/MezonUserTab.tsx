@@ -56,7 +56,7 @@ const MezonUserTab = ({ handleSaveListUser }: IMezonUserTabProps) => {
     setMezonClanUsers(newList);
     setisCheckAll(!isCheckAll);
   };
-
+  console.log("listMezonUser", listMezonUser);
   return (
     <div className='w-full h-full'>
       <div className='h-[50px] p-2 flex items-center justify-between '>
@@ -107,9 +107,12 @@ const MezonUserTab = ({ handleSaveListUser }: IMezonUserTabProps) => {
                   <Checkbox checked={player.isSelected ?? false} onClick={() => handleCheckUser(player.id)} />
                 </span>
                 <div className='w-[270px] flex items-center ml-8'>
-                  <img className='w-[35px] h-[35px] rounded-full' src={player.user.avatar_url} />
+                  <img
+                    className='w-[35px] h-[35px] rounded-full'
+                    src={player.user.avatar_url ?? "https://mezon.ai/assets/images/mezon-logo-black.svg"}
+                  />
                   <div className='ml-2 flex flex-col justify-center items-start flex-1 h-full w-full'>
-                    <span className=''>{player.user.display_name}</span>
+                    <span className=''>{player.user.display_name ?? player.user.username}</span>
                     <span className='text-[12px] font-light text-gray-500'>
                       {mezonClanRoles
                         .filter((role) => player.role_id.includes(role.id))

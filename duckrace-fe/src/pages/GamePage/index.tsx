@@ -330,7 +330,7 @@ const GamePage = () => {
         userChannelId: user.userChannelId,
         user: {
           display_name: user.user.display_name,
-          user_name: user.user.user_name,
+          username: user.user.username,
           avatar_url: user.user.avatar_url,
         },
         isSelected: false,
