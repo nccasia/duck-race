@@ -1,23 +1,71 @@
+import { GetAccessToken } from "@/entities/User";
 import logger from "@/helpers/logger";
+import { IJWTService } from "@/interfaces/IJWTService";
 import { IUserService } from "@/interfaces/IUserService";
 import { Hasher } from "@/utils/hash";
 import { StatusCodes } from "http-status-codes";
 import { Base64 } from "js-base64";
 import * as queryString from "query-string";
+import PrismaService from "../database/PrismaService";
 class UserService implements IUserService {
-  private static instance: UserService;
-  private listUsers: Array<User> = [];
+  private prismaService: PrismaService;
+  private jwtService: IJWTService;
 
-  private constructor() {}
-
-  public static getInstance(): UserService {
-    if (!UserService.instance) {
-      UserService.instance = new UserService();
-    }
-    return UserService.instance;
+  constructor(PrismaService: PrismaService, JWTService: IJWTService) {
+    this.prismaService = PrismaService;
+    this.jwtService = JWTService;
   }
-  public getListUsers(): Array<User> {
-    return this.listUsers;
+
+  public async getAccessTokenAsync(data: GetAccessToken): Promise<ServiceResponse> {
+    try {
+      const { hashData, userData } = data;
+      const checkHash = await this.verifyHashUser(hashData);
+      if (!checkHash.isSuccess) {
+        return checkHash;
+      }
+      const checkUser = await this.prismaService.user.findUnique({
+        where: {
+          mezonUserId: userData.mezonUserId,
+        },
+      });
+      if (!checkUser) {
+        const addUserResponse = await this.addUser(userData);
+        if (!addUserResponse.isSuccess) {
+          return addUserResponse;
+        }
+        console.log("add user success", addUserResponse);
+      }
+      const getUserResponse = await this.prismaService.user.findUnique({
+        where: {
+          mezonUserId: userData.mezonUserId,
+        },
+      });
+    } catch (error) {
+      logger.error(error?.message);
+      return {
+        statusCode: 500,
+        isSuccess: false,
+        errorMessage: "Lỗi từ hệ thống",
+      };
+    }
+  }
+
+  public async getListUsers(): Promise<ServiceResponse> {
+    try {
+      const users = await this.prismaService.user.findMany();
+      return {
+        statusCode: 200,
+        isSuccess: true,
+        data: users,
+      };
+    } catch (error) {
+      logger.error(error?.message);
+      return {
+        statusCode: 500,
+        isSuccess: false,
+        errorMessage: "Lỗi từ hệ thống",
+      };
+    }
   }
 
   public async verifyHashUser(hashData: string): Promise<ServiceResponse> {
@@ -29,8 +77,7 @@ class UserService implements IUserService {
 
       const { hash, ...hashParams } = mezonEventData as HashData;
       const mezonUser = JSON.parse(hashParams?.user) as MezonUser;
-      const hashParamsString = queryString.stringify(hashParams, { sort: false });
-
+      const hashParamsString = rawHashData.split("&hash=")[0];
       const botToken = process.env.MEZON_APP_TOKEN || "";
       const secretKey = Hasher.HMAC_SHA256(botToken, "WebAppData");
       const hashedData = Hasher.HEX(Hasher.HMAC_SHA256(secretKey, hashParamsString));
@@ -48,11 +95,12 @@ class UserService implements IUserService {
         data: mezonUser,
       };
     } catch (error) {
+      console.log(error);
       logger.error(error?.message);
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Lỗi từ hệ thống kkk",
       };
     }
   }
@@ -60,11 +108,22 @@ class UserService implements IUserService {
   public async addUser(user: User): Promise<ServiceResponse> {
     // Implementation here
     try {
-      this.listUsers.push(user);
+      if (!user.mezonUserId || !user.userName || !user.playerName || !user.email || !user.wallet) {
+        return {
+          statusCode: 400,
+          isSuccess: false,
+          errorMessage: "Vui lòng cung cấp đủ thông tin người dùng!",
+        };
+      }
+      delete user.id;
+      console.log(user);
+      const addUserResponse = await this.prismaService.user.create({
+        data: user,
+      });
       return {
         statusCode: 200,
         isSuccess: true,
-        data: user,
+        data: addUserResponse,
       };
     } catch (error) {
       logger.error(error?.message);
@@ -86,7 +145,11 @@ class UserService implements IUserService {
           errorMessage: "Không tìm thấy mã người dùng",
         };
       }
-      this.listUsers = this.listUsers.filter((user) => user.id !== id);
+      await this.prismaService.user.delete({
+        where: {
+          id: id,
+        },
+      });
       return {
         statusCode: 200,
         isSuccess: true,
@@ -112,7 +175,11 @@ class UserService implements IUserService {
           errorMessage: "Không tìm thấy mã người dùng",
         };
       }
-      const user = this.listUsers.find((user) => user.id === id);
+      const user = await this.prismaService.user.findUnique({
+        where: {
+          id: id,
+        },
+      });
       if (!user) {
         return {
           statusCode: 404,
@@ -145,18 +212,18 @@ class UserService implements IUserService {
           errorMessage: "Không tìm thấy mã socket",
         };
       }
-      const user = this.listUsers.find((user) => user.socketId === socketId);
-      if (!user) {
-        return {
-          statusCode: 404,
-          isSuccess: false,
-          errorMessage: "Không tìm thấy người dùng",
-        };
-      }
+      // const user = this.listUsers.find((user) => user.socketId === socketId);
+      // if (!user) {
+      //   return {
+      //     statusCode: 404,
+      //     isSuccess: false,
+      //     errorMessage: "Không tìm thấy người dùng",
+      //   };
+      // }
       return {
         statusCode: 200,
         isSuccess: true,
-        data: user,
+        // data: user,
       };
     } catch (error) {
       logger.error(error?.message);
@@ -171,25 +238,25 @@ class UserService implements IUserService {
   public async getSocketIdOfUserAsync(userId: string): Promise<ServiceResponse> {
     // Implementation here
     try {
-      if (!userId) {
-        return {
-          statusCode: 400,
-          isSuccess: false,
-          errorMessage: "Không tìm thấy mã người dùng",
-        };
-      }
-      const user = this.listUsers.find((user) => user.id === userId);
-      if (!user) {
-        return {
-          statusCode: 404,
-          isSuccess: false,
-          errorMessage: "Không tìm thấy người dùng",
-        };
-      }
+      // if (!userId) {
+      //   return {
+      //     statusCode: 400,
+      //     isSuccess: false,
+      //     errorMessage: "Không tìm thấy mã người dùng",
+      //   };
+      // }
+      // const user = this.listUsers.find((user) => user.id === userId);
+      // if (!user) {
+      //   return {
+      //     statusCode: 404,
+      //     isSuccess: false,
+      //     errorMessage: "Không tìm thấy người dùng",
+      //   };
+      // }
       return {
         statusCode: 200,
         isSuccess: true,
-        data: user.socketId,
+        // data: user.socketId,
       };
     } catch (error) {
       logger.error(error?.message);
@@ -210,36 +277,18 @@ class UserService implements IUserService {
           errorMessage: "Không tìm thấy mã người dùng",
         };
       }
-      const user = this.listUsers.find((user) => user.id === userId);
-      if (!user) {
-        return {
-          statusCode: 404,
-          isSuccess: false,
-          errorMessage: "Không tìm thấy người dùng",
-        };
-      }
+      // const user = this.listUsers.find((user) => user.id === userId);
+      // if (!user) {
+      //   return {
+      //     statusCode: 404,
+      //     isSuccess: false,
+      //     errorMessage: "Không tìm thấy người dùng",
+      //   };
+      // }
       return {
         statusCode: 200,
         isSuccess: true,
-        data: user.socketId,
-      };
-    } catch (error) {
-      logger.error(error?.message);
-      return {
-        statusCode: 500,
-        isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
-      };
-    }
-  }
-
-  public async getListUsersAsync(): Promise<ServiceResponse> {
-    // Implementation here
-    try {
-      return {
-        statusCode: 200,
-        isSuccess: true,
-        data: this.listUsers,
+        // data: user.socketId,
       };
     } catch (error) {
       logger.error(error?.message);

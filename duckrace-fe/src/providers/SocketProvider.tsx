@@ -29,15 +29,12 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
       socket.current.on("connect", () => {
         console.log("Connected to socket");
-        socket.current?.emit(SocketEvents.EMIT.USER_VISIT_GAME, {
-          walletBalance: currentUser.wallet,
-          hashData: userHashInfo.hashData,
-        });
+        // socket.current?.emit(SocketEvents.EMIT.USER_VISIT_GAME, {
+        //   walletBalance: currentUser.wallet,
+        //   hashData: userHashInfo.hashData,
+        // });
       });
 
-      // socket.current.on(SocketEvents.ON.USER_VISIT_GAME_SUCCESS, (data) => {
-      //   console.log("User visit game success --------------------------------------------------------", data);
-      // });
       socket.current.on(SocketEvents.ON.USER_VISIT_GAME_FAILED, (data) => {
         toast.error(data?.errorMessage);
       });
@@ -49,7 +46,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         setSocketInitialized(false);
       };
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser.id, setCurrentUser, userHashInfo]);
 
   return <SocketContext.Provider value={socket.current}>{children}</SocketContext.Provider>;

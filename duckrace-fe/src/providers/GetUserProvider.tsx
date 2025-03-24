@@ -1,26 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import useUserStore from "@/stores/userStore";
+import { IUserHashInfo, User } from "@/interface/user/User";
+import userServices from "@/services/userServices";
 import { MezonAppEvent, MezonWebViewEvent } from "@/types/webview";
 import { Base64 } from "js-base64";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface GetUserProviderProps {
   children: React.ReactNode;
 }
 const GetUserProvider = ({ children }: GetUserProviderProps) => {
-  const setCurrentUser = useUserStore((state) => state.setCurrentUser);
-  const setUserHashInfo = useUserStore((state) => state.setUserHashInfo);
-  // const fetchCurrentUser = useMemo(() => {
-  //   const user: User = {
-  //     id: getFromLocalStorage("mezonUserId") ?? "a",
-  //     name: getFromLocalStorage("userName") ?? "Nguyen Van A",
-  //     username: getFromLocalStorage("userName") ?? "NguyenVanA",
-  //     avatar: "https://avatar.iran.liara.run/public",
-  //     email: getFromLocalStorage("email") ?? "",
-  //     wallet: 1000000,
-  //   };
-  //   return user;
-  // }, []);
+  const [mezonUser, setMezonUser] = useState<User>();
+  const [hashData, setHashData] = useState<IUserHashInfo>();
   useEffect(() => {
     window.Mezon.WebView?.postEvent("PING" as MezonWebViewEvent, { message: "PING" }, () => {
       console.log("PING");
@@ -30,14 +20,15 @@ const GetUserProvider = ({ children }: GetUserProviderProps) => {
         return;
       }
       const user = {
+        mezonUserId: userData.user?.id,
         id: userData.user?.id,
-        name: userData.user?.display_name,
+        playerName: userData.user?.display_name,
         userName: userData.user?.username,
         avatar: userData.user?.avatar_url,
         email: userData?.email,
         wallet: JSON.parse(userData.wallet).value,
       };
-      if (user) setCurrentUser(user);
+      if (user) setMezonUser(user);
     });
     window.Mezon.WebView?.postEvent(
       "SEND_BOT_ID" as MezonWebViewEvent,
@@ -47,12 +38,17 @@ const GetUserProvider = ({ children }: GetUserProviderProps) => {
     window.Mezon.WebView?.onEvent("USER_HASH_INFO" as MezonAppEvent, async (_, data: any) => {
       const mezonEventData: string | null | undefined = data?.message?.web_app_data;
       if (!mezonEventData) return;
-      setUserHashInfo({ hashData: Base64.encode(mezonEventData) });
+      setHashData({ hashData: Base64.encode(mezonEventData) });
     });
-    // const user = fetchCurrentUser;
-    // console.log("user", user);
-    // if (user) setCurrentUser(user);
-  }, [setCurrentUser, setUserHashInfo]);
+  }, [setHashData, setMezonUser]);
+  useEffect(() => {
+    if (!mezonUser || !hashData) return;
+    const login = async () => {
+      const response = await userServices.login({ userData: mezonUser, hashData: hashData.hashData });
+      console.log(response);
+    };
+    login();
+  }, [mezonUser, hashData]);
   return <div>{children}</div>;
 };
 export default GetUserProvider;

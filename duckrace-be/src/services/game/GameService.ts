@@ -8,6 +8,8 @@ import { IBetForDuckDTO } from "@/models/games/IBetForDuckDTO";
 import { IConfirmBet } from "@/models/games/IConfirmBet";
 import { ICreateGameSubmitDTO } from "@/models/games/ICreateGameSubmitDTO";
 import { generateId } from "@/utils/generateId";
+import JwtService from "../auth/JWTService";
+import PrismaService from "../database/PrismaService";
 import MezonClientService from "../mezon-client/MezonClientService";
 import RoomService from "../room/RoomService";
 import UserService from "../user/UserService";
@@ -19,15 +21,15 @@ class GameService implements IGameService {
   private _userService: IUserService;
   private _mezonClientService: IMezonClientService;
 
-  constructor() {
+  constructor(UserService: IUserService) {
     this._roomService = RoomService.getInstance();
-    this._userService = UserService.getInstance();
+    this._userService = UserService;
     this._mezonClientService = MezonClientService.getInstance();
   }
 
   public static getInstance(): GameService {
     if (!GameService.instance) {
-      GameService.instance = new GameService();
+      GameService.instance = new GameService(new UserService(new PrismaService(), new JwtService()));
     }
     return GameService.instance;
   }
@@ -192,7 +194,8 @@ class GameService implements IGameService {
           errorMessage: "Game is not found",
         };
       }
-      const listUser = this._userService.getListUsers();
+      const listUserResponse = this._userService.getListUsers();
+      const listUser = (await listUserResponse).data as User[];
       const ducksResponse = await this._roomService.getDucksOfRoom(game.roomId);
       const listDucks = ducksResponse.data;
       const gameBettors: BettorOfDucks[] = listDucks?.map((duck) => {

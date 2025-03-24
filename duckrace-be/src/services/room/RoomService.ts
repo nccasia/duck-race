@@ -10,20 +10,19 @@ import { IRemoveDuckDTO } from "@/models/rooms/IRemoveDuckDTO";
 import { IStartGameSubmitDTO } from "@/models/rooms/IStartGameSubmitDTO";
 import { IUpdateListDuckDTO } from "@/models/rooms/IUpdateListDuckDTO";
 import { generateId } from "@/utils/generateId";
-import UserService from "../user/UserService";
 
 class RoomService implements IRoomService {
   private static instance: RoomService;
   private listRooms: Array<Room> = [];
   private _userService: IUserService;
-  private constructor() {
-    this._userService = UserService.getInstance();
+  private constructor(UserService: IUserService) {
+    this._userService = UserService;
   }
 
   public static getInstance(): RoomService {
-    if (!RoomService.instance) {
-      RoomService.instance = new RoomService();
-    }
+    // if (!RoomService.instance) {
+    //   RoomService.instance = new RoomService(new UserService(new PrismaService(), new JwtService()));
+    // }
     return RoomService.instance;
   }
 
@@ -243,7 +242,8 @@ class RoomService implements IRoomService {
       if (!room.isSuccess) {
         return room;
       }
-      const listUsers = this._userService.getListUsers();
+      const listUserResponse = await this._userService.getListUsers();
+      const listUsers = listUserResponse.data as User[];
       const listMembers = room.data?.members?.map((userId: string) => {
         const user = listUsers.find((user) => user.id === userId);
         return user;

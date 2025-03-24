@@ -19,7 +19,6 @@ import { Server, Socket } from "socket.io";
 import GameService from "../game/GameService";
 import MezonClientService from "../mezon-client/MezonClientService";
 import RoomService from "../room/RoomService";
-import UserService from "../user/UserService";
 
 class SocketService implements ISocketService {
   private socketServer: Server;
@@ -27,11 +26,11 @@ class SocketService implements ISocketService {
   private _gameService: IGameService;
   private _roomService: IRoomService;
   private _mezonClientService: IMezonClientService;
-  constructor(Application: Application) {
+  constructor(Application: Application, UserService: IUserService) {
     this.socketServer = Application.socketServer;
-    this._userService = UserService.getInstance();
     this._gameService = GameService.getInstance();
     this._roomService = RoomService.getInstance();
+    this._userService = UserService;
     this._mezonClientService = MezonClientService.getInstance();
     this.initGameService();
   }
@@ -80,9 +79,12 @@ class SocketService implements ISocketService {
     const socketUser: User = {
       id: mezonUser.id,
       socketId: socket.id,
+      mezonUserId: mezonUser.mezon_id,
       playerName: mezonUser.display_name,
       userName: mezonUser.username,
       wallet: walletBalance,
+      email: mezonUser.email,
+      avatar: mezonUser.avatar_url,
     };
     const addUserResponse = await this._userService.addUser(socketUser);
     if (addUserResponse.isSuccess) {
@@ -368,9 +370,9 @@ class SocketService implements ISocketService {
   };
 
   onDisconnect = async (socket: Socket) => {
-    const userBySocketResponse = await this._userService.getUserBySocketId(socket.id);
-    const user = userBySocketResponse.data as User;
-    this.onLeaveRoom(socket, { userId: user?.id, roomId: "" });
+    // const userBySocketResponse = await this._userService.getUserBySocketId(socket.id);
+    // const user = userBySocketResponse.data as User;
+    // this.onLeaveRoom(socket, { userId: user?.id, roomId: "" });
   };
 }
 export default SocketService;
