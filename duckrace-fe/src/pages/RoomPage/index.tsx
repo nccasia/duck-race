@@ -21,6 +21,9 @@ const RoomPage = () => {
     if (!socket) return;
     socket.emit(SocketEvents.EMIT.JOIN_ROOM, { roomId, userId: currentUser.id });
   };
+  const handleGoToHomePage = () => {
+    navigate(ROUTES.HOME);
+  };
   useEffect(() => {
     if (!socket || !currentUser.id) return;
     socket.emit(SocketEvents.EMIT.GET_LIST_ROOMS, {});
@@ -55,7 +58,10 @@ const RoomPage = () => {
   return (
     <div className='h-full w-full bg-gradient-to-b from-teal-100 via-teal-300 to-teal-200 bg-center bg-no-repeat  p-2 relative'>
       <div className='h-[100px] flex justify-center relative'>
-        <div className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-0 left-2 hover:scale-[0.98] transition-all active:scale-[1.0]'>
+        <div
+          onClick={handleGoToHomePage}
+          className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-0 left-2 hover:scale-[0.98] transition-all active:scale-[1.0]'
+        >
           <img src='/Buttons/SmallButton-pressed.png' />
           <img className='w-[30px] absolute top-[12px] left-[12px]' src='/Icons/ExitIcon.png' />
         </div>
