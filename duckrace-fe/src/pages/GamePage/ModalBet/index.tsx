@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 const ModalBet = () => {
   const [timeCountDown, setTimeCountDown] = useState<number | null>(30);
   const [isActive, setIsActive] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { gameStatus, openModalBet, setOpenModalBet, listBettorOfDucks, listDuckPicked, setListDuckPicked, isConfirmedBet } =
     useGameStore();
   const { currentRoom } = useRoomStore();
@@ -53,6 +54,7 @@ const ModalBet = () => {
         appId: import.meta.env.VITE_MEZON_APP_ID,
       }),
     };
+    setIsPopoverOpen(false);
     window.Mezon.WebView?.postEvent("SEND_TOKEN" as MezonWebViewEvent, dataEmit, () => {});
   };
 
@@ -211,11 +213,12 @@ const ModalBet = () => {
             </div>
           </div>
           <div className=' pt-1 h-[55px] flex justify-center items-center'>
-            <Popover>
+            <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
               <PopoverTrigger asChild>
                 <button
                   disabled={gameStatus !== "betting" || listDuckPicked.length === 0 || isConfirmedBet}
                   className='w-[150px] h-[40px] cursor-pointer justify-center items-center relative filter hover:drop-shadow-[0_0_0.1rem_rgba(124,6,226,0.874)] transition-all active:drop-shadow-[0_0_0.2rem_rgba(124,6,226,0.874)]'
+                  onClick={() => setIsPopoverOpen(true)}
                 >
                   <img
                     className='w-full h-full'
@@ -241,7 +244,7 @@ const ModalBet = () => {
                 </div>
                 <div className='flex justify-center items-center gap-2 h-[80px]'>
                   <div
-                    onClick={() => setOpenModalBet(true)}
+                    onClick={() => setIsPopoverOpen(false)}
                     className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer relative hover:scale-[0.98] transition-all active:scale-[1.0]'
                   >
                     <img src='/Buttons/SmallButton-pressed.png' />

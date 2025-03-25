@@ -23,7 +23,7 @@ class Duck {
   public userChannelId?: string;
   public user?: {
     display_name: string;
-    user_name: string;
+    username: string;
     avatar_url: string;
   };
   public isSelected?: boolean;
