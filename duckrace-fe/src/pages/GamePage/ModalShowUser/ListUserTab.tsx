@@ -35,7 +35,7 @@ const ListUserTab = ({ handleChangeTab }: IListUserTabProps) => {
         ))
       ) : (
         <div className='text-center flex flex-col items-center h-[200px] justify-center'>
-          <span className='font-titan text-lg text-red-500'>Bạn chưa thêm người chơi nào!</span>
+          <span className='font-titan text-lg text-red-500'>You have not added any players yet!</span>
           <div
             onClick={() => handleChangeTab("add-user")}
             className='w-[150px] h-[70px] mx-auto mt-3 relative cursor-pointer hover:scale-[0.99] transition-all active:scale-[1.0]'
