@@ -1,8 +1,10 @@
 export interface IAccessTokenPayload {
-  userId: string;
-  username: string;
-  role: string;
-  roleName: string;
+  id: string;
+  mezonUserId: string;
+  userName: string;
+  playerName: string;
+  email: string;
+  wallet: number;
 }
 export interface IAccessTokenResponse {
   token: string;

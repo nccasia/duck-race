@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
-import useGameStore from "@/stores/gameStore"; // Giả sử bạn có store để quản lý state
-import { useSocket } from "@/providers/SocketProvider";
-import useRoomStore from "@/stores/roomStore";
 import { SocketEvents } from "@/constants/SocketEvents";
 import { IGameResult } from "@/interface/game/Game";
+import { useSocket } from "@/providers/SocketProvider";
+import useGameStore from "@/stores/gameStore"; // Giả sử bạn có store để quản lý state
+import useRoomStore from "@/stores/roomStore";
+import { useEffect, useRef } from "react";
 
 const ListPlayer = () => {
   const socket = useSocket();
@@ -41,7 +41,6 @@ const ListPlayer = () => {
       isEndGameRef.current = true;
       setGameStatus("completed");
       setGameResult(data);
-      console.log("end game", data);
     });
     return () => {
       socket.off(SocketEvents.ON.END_GAME_SUCCESS);

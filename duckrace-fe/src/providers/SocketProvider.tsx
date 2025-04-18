@@ -18,6 +18,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const currentUser = useUserStore((state) => state.currentUser);
   const userHashInfo = useUserStore((state) => state.userHashInfo);
   const setCurrentUser = useUserStore((state) => state.setCurrentUser);
+  console.log(currentUser);
   useEffect(() => {
     if (currentUser.id && !socketInitialized && userHashInfo) {
       socket.current = io(import.meta.env.VITE_BACKEND_URL, {
@@ -29,10 +30,6 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
       socket.current.on("connect", () => {
         console.log("Connected to socket");
-        // socket.current?.emit(SocketEvents.EMIT.USER_VISIT_GAME, {
-        //   walletBalance: currentUser.wallet,
-        //   hashData: userHashInfo.hashData,
-        // });
       });
 
       socket.current.on(SocketEvents.ON.USER_VISIT_GAME_FAILED, (data) => {

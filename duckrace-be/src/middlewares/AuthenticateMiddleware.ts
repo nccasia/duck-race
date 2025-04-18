@@ -51,7 +51,7 @@ function AuthenticateMiddleware(JwtService: IJWTService): RequestHandler {
       });
     }
     req.user = {
-      id: payload?.userId || payload?.userid,
+      id: payload?.userId || payload?.userid || payload?.id,
       userName: payload?.username,
       playerName: payload?.playerName,
       wallet: payload?.wallet,

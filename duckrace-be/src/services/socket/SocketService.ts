@@ -16,9 +16,6 @@ import { IRemoveDuckDTO } from "@/models/rooms/IRemoveDuckDTO";
 import { IStartGameSubmitDTO } from "@/models/rooms/IStartGameSubmitDTO";
 import { IUpdateListDuckDTO } from "@/models/rooms/IUpdateListDuckDTO";
 import { Server, Socket } from "socket.io";
-import GameService from "../game/GameService";
-import MezonClientService from "../mezon-client/MezonClientService";
-import RoomService from "../room/RoomService";
 
 class SocketService implements ISocketService {
   private socketServer: Server;
@@ -26,12 +23,19 @@ class SocketService implements ISocketService {
   private _gameService: IGameService;
   private _roomService: IRoomService;
   private _mezonClientService: IMezonClientService;
-  constructor(Application: Application, UserService: IUserService) {
+
+  constructor(
+    Application: Application,
+    UserService: IUserService,
+    RoomService: IRoomService,
+    GameService: IGameService,
+    MezonClientService: IMezonClientService
+  ) {
     this.socketServer = Application.socketServer;
-    this._gameService = GameService.getInstance();
-    this._roomService = RoomService.getInstance();
+    this._gameService = GameService;
+    this._roomService = RoomService;
     this._userService = UserService;
-    this._mezonClientService = MezonClientService.getInstance();
+    this._mezonClientService = MezonClientService;
     this.initGameService();
   }
 
@@ -280,7 +284,6 @@ class SocketService implements ISocketService {
             const check = this._roomService.checkGameCompleted(data.roomId);
             if (check) {
               const endGameResponse = await this._gameService.endGame(data.gameId);
-              console.log("endGameResponse", endGameResponse);
               if (endGameResponse.isSuccess) {
                 const dataEmit = {
                   winners: endGameResponse.data.winners,
@@ -370,9 +373,8 @@ class SocketService implements ISocketService {
   };
 
   onDisconnect = async (socket: Socket) => {
-    // const userBySocketResponse = await this._userService.getUserBySocketId(socket.id);
-    // const user = userBySocketResponse.data as User;
-    // this.onLeaveRoom(socket, { userId: user?.id, roomId: "" });
+    const userId = socket.handshake.query.userId as string;
+    this.onLeaveRoom(socket, { userId, roomId: "" });
   };
 }
 export default SocketService;

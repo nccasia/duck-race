@@ -48,7 +48,7 @@ const ModalBet = () => {
       amount,
       note: `Đã đặt cược ${amount} token khi chơi game duckrace!`,
       sender_id: currentUser.id,
-      sender_name: currentUser.name,
+      sender_name: currentUser.userName,
       extra_attribute: JSON.stringify({
         sessionId: currentRoom?.currentGame,
         appId: import.meta.env.VITE_MEZON_APP_ID,
@@ -174,7 +174,7 @@ const ModalBet = () => {
                                 >
                                   <img className='w-[40px] h-[40px] rounded-full' src='/Icons/StarIcon.png' />
                                   <div className='flex flex-col gap-1 ml-2'>
-                                    <span className='text-white font-titan'>{bettor.user.name}</span>
+                                    <span className='text-white font-titan'>{bettor.user.userName}</span>
                                     <span className='text-white font-titan text-sm'>Quyen Nguyen Ta</span>
                                   </div>
                                 </div>

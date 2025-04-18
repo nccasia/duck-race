@@ -1,17 +1,17 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AppResponse } from "@/interface/app/AppResponse";
-import { IGetAccessToken } from "@/interface/user/User";
-import http from "@/utils/axios";
+import { IGetAccessToken, ILoginResponse } from "@/interface/user/User";
+import axiosConfig from "@/utils/axios";
 
-const login = async (data: IGetAccessToken): Promise<AppResponse<any>> => {
+const login = async (data: IGetAccessToken): Promise<AppResponse<ILoginResponse>> => {
   try {
-    const response: AppResponse<any> = await http.post("/api/users/login", data);
-    return response;
+    const response = await axiosConfig.post<AppResponse<ILoginResponse>>("/api/users/login", data);
+    return response; // Extract the `data` field to match `AppResponse<ILoginResponse>`
   } catch (error) {
     console.log("Error in userServices -> login", error);
     throw error;
   }
 };
+
 const userServices = {
   login,
 };

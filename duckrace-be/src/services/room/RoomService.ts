@@ -12,18 +12,11 @@ import { IUpdateListDuckDTO } from "@/models/rooms/IUpdateListDuckDTO";
 import { generateId } from "@/utils/generateId";
 
 class RoomService implements IRoomService {
-  private static instance: RoomService;
   private listRooms: Array<Room> = [];
   private _userService: IUserService;
-  private constructor(UserService: IUserService) {
-    this._userService = UserService;
-  }
 
-  public static getInstance(): RoomService {
-    // if (!RoomService.instance) {
-    //   RoomService.instance = new RoomService(new UserService(new PrismaService(), new JwtService()));
-    // }
-    return RoomService.instance;
+  constructor(UserService: IUserService) {
+    this._userService = UserService;
   }
 
   private randomDuckArray(ducks: Duck[]): Duck[] {

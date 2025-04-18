@@ -1,9 +1,9 @@
 import { useEffect } from "react";
+import { ToastContainer } from "react-toastify";
 import "./App.css";
+import AppProvider from "./providers/AppProvider";
 import RouteManager from "./routes";
 import { MezonAppEvent, MezonWebViewEvent } from "./types/webview";
-import AppProvider from "./providers/AppProvider";
-import { ToastContainer } from "react-toastify";
 function App() {
   useEffect(() => {
     window?.Mezon?.WebView?.postEvent("PING" as MezonWebViewEvent, { message: "Hello Mezon!" }, () => {});
@@ -16,7 +16,7 @@ function App() {
       <div className='flex justify-center items-center h-screen'>
         <RouteManager />
         <ToastContainer
-          position='top-right'
+          position='bottom-left'
           autoClose={5000}
           hideProgressBar={false}
           newestOnTop={false}

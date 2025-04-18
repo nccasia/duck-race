@@ -1,6 +1,6 @@
 export interface User {
   id?: string;
-  name?: string;
+  playerName?: string;
   userName: string;
   avatar?: string;
   email?: string;
@@ -15,4 +15,14 @@ export interface IUserHashInfo {
 export interface IGetAccessToken {
   userData: User;
   hashData: string;
+}
+
+export interface IAccessToken {
+  token: string;
+  expiresAt: Date;
+  expiresAtUtc: string;
+}
+export interface ILoginResponse {
+  userInfor: User;
+  accessToken: IAccessToken;
 }

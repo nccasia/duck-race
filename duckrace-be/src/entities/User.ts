@@ -2,4 +2,9 @@ class GetAccessToken {
   userData: User;
   hashData: string;
 }
-export { GetAccessToken };
+class UpdateWalletTokenResponse {
+  userId: string;
+  amount: number;
+  currentWallet: number;
+}
+export { GetAccessToken, UpdateWalletTokenResponse };

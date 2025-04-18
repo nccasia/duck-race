@@ -11,9 +11,9 @@ class UserService implements IUserService {
   private prismaService: PrismaService;
   private jwtService: IJWTService;
 
-  constructor(PrismaService: PrismaService, JWTService: IJWTService) {
+  constructor(PrismaService: PrismaService, JwtService: IJWTService) {
     this.prismaService = PrismaService;
-    this.jwtService = JWTService;
+    this.jwtService = JwtService;
   }
 
   public async getAccessTokenAsync(data: GetAccessToken): Promise<ServiceResponse> {
@@ -33,13 +33,36 @@ class UserService implements IUserService {
         if (!addUserResponse.isSuccess) {
           return addUserResponse;
         }
-        console.log("add user success", addUserResponse);
       }
       const getUserResponse = await this.prismaService.user.findUnique({
         where: {
           mezonUserId: userData.mezonUserId,
         },
       });
+      if (!getUserResponse) {
+        return {
+          statusCode: 404,
+          isSuccess: false,
+          errorMessage: "Không tìm thấy người dùng",
+        };
+      }
+      const generateTokenData = {
+        id: getUserResponse.id,
+        mezonUserId: getUserResponse.mezonUserId,
+        userName: getUserResponse.userName,
+        playerName: getUserResponse.playerName,
+        email: getUserResponse.email,
+        wallet: getUserResponse.wallet,
+      };
+      const accessToken = this.jwtService.generateAccessToken(generateTokenData);
+      return {
+        statusCode: 200,
+        isSuccess: true,
+        data: {
+          userInfor: getUserResponse,
+          accessToken: accessToken,
+        },
+      };
     } catch (error) {
       logger.error(error?.message);
       return {
@@ -95,7 +118,6 @@ class UserService implements IUserService {
         data: mezonUser,
       };
     } catch (error) {
-      console.log(error);
       logger.error(error?.message);
       return {
         statusCode: 500,
@@ -108,15 +130,15 @@ class UserService implements IUserService {
   public async addUser(user: User): Promise<ServiceResponse> {
     // Implementation here
     try {
-      if (!user.mezonUserId || !user.userName || !user.playerName || !user.email || !user.wallet) {
+      if (!user.mezonUserId || !user.userName || !user.playerName || !user.email) {
         return {
           statusCode: 400,
           isSuccess: false,
           errorMessage: "Vui lòng cung cấp đủ thông tin người dùng!",
         };
       }
+      if (!user.wallet) user.wallet = 0;
       delete user.id;
-      console.log(user);
       const addUserResponse = await this.prismaService.user.create({
         data: user,
       });
@@ -124,6 +146,69 @@ class UserService implements IUserService {
         statusCode: 200,
         isSuccess: true,
         data: addUserResponse,
+      };
+    } catch (error) {
+      logger.error(error?.message);
+      return {
+        statusCode: 500,
+        isSuccess: false,
+        errorMessage: "Lỗi từ hệ thống",
+      };
+    }
+  }
+
+  public async updateWalletToken(userId: string, amount: number): Promise<ServiceResponse> {
+    try {
+      if (!userId) {
+        return {
+          statusCode: 400,
+          isSuccess: false,
+          errorMessage: "Không tìm thấy mã người dùng",
+        };
+      }
+      if (!amount) {
+        return {
+          statusCode: 400,
+          isSuccess: false,
+          errorMessage: "Vui lòng cung cấp số tiền cần cập nhật!",
+        };
+      }
+      const user = await this.prismaService.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
+      if (!user) {
+        return {
+          statusCode: 404,
+          isSuccess: false,
+          errorMessage: "Không tìm thấy người dùng",
+        };
+      }
+      if (user.wallet + amount < 0) {
+        return {
+          statusCode: 400,
+          isSuccess: false,
+          errorMessage: "Số tiền trong ví không đủ để thực hiện giao dịch!",
+        };
+      }
+      const updateWallet = await this.prismaService.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          wallet: user.wallet + amount,
+        },
+      });
+      const updateWalletResponse = {
+        userId: updateWallet.id,
+        amount: amount,
+        currentWallet: updateWallet.wallet,
+      };
+      return {
+        statusCode: 200,
+        isSuccess: true,
+        data: updateWalletResponse,
       };
     } catch (error) {
       logger.error(error?.message);

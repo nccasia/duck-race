@@ -2,15 +2,8 @@ import { IMezonClientService } from "@/interfaces/IMezonClientService";
 import { MezonClient, TokenSentEvent } from "mezon-sdk";
 
 class MezonClientService implements IMezonClientService {
-  private static instance: MezonClientService;
   private client: MezonClient;
   constructor() {}
-  public static getInstance(): MezonClientService {
-    if (!MezonClientService.instance) {
-      MezonClientService.instance = new MezonClientService();
-    }
-    return MezonClientService.instance;
-  }
 
   public async authenticate(): Promise<any> {
     console.log("MezonClientService authenticate");

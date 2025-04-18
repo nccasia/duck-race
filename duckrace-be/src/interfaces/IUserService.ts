@@ -7,6 +7,7 @@ export interface IUserService {
   removeUser(id: string): Promise<ServiceResponse>;
   getUserById(id: string): Promise<ServiceResponse>;
   getAccessTokenAsync(data: GetAccessToken): Promise<ServiceResponse>;
+  updateWalletToken(userId: string, amount: number): Promise<ServiceResponse>;
   // getUserBySocketId(socketId: string): Promise<ServiceResponse>;
   // getSocketIdOfUserAsync(userId: string): Promise<ServiceResponse>;
   // getSocketIdOfUser(userId: string): ServiceResponse;

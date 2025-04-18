@@ -1,7 +1,7 @@
 import Loading from "@/components/Loading";
 import { SocketEvents } from "@/constants/SocketEvents";
 import { AppResponse } from "@/interface/app/AppResponse";
-import { BettorOfDucks, DuckPicked, IGame } from "@/interface/game/Game";
+import { BettorOfDucks, DuckPicked } from "@/interface/game/Game";
 import { IDuck, IMezonClan, IMezonUser, Room } from "@/interface/room/Room";
 import { User } from "@/interface/user/User";
 import { useSocket } from "@/providers/SocketProvider";
@@ -67,7 +67,6 @@ const GamePage = () => {
     if (!socket || !roomId) return;
     socket.emit(SocketEvents.EMIT.GET_ROOM_INFO, roomId);
     socket.on(SocketEvents.ON.GET_ROOM_INFO_SUCCESS, (data: AppResponse<Room>) => {
-      console.log("room info", data);
       setCurrentRoom(data.data as Room);
       setListDucks(data.data?.ducks || []);
       setTotalDucks(data.data?.totalDuck || 0);
@@ -85,36 +84,24 @@ const GamePage = () => {
         `${ROUTES.ROOM_DETAIL.replace(":roomId", (data.data as Room)?.roomId)}?gameId=${(data.data as Room)?.currentGame}`
       );
     });
-    socket.on(SocketEvents.ON.GET_ROOM_INFO_FAILED, (data: AppResponse<null>) => {
-      console.log("Get room info failed", data);
-    });
+    socket.on(SocketEvents.ON.GET_ROOM_INFO_FAILED, () => {});
     socket.on(SocketEvents.ON.GET_MEMBER_OF_ROOM_SUCCESS, (data: AppResponse<User[]>) => {
       setRoomMembers(data.data || []);
     });
-    socket.on(SocketEvents.ON.GET_MEMBER_OF_ROOM_FAILED, (data: AppResponse<null>) => {
-      console.log("Member Of Room", data);
-    });
+    socket.on(SocketEvents.ON.GET_MEMBER_OF_ROOM_FAILED, () => {});
     socket.on(SocketEvents.ON.GET_DUCKS_OF_ROOM_SUCCESS, (data: AppResponse<IDuck[]>) => {
-      console.log("Get duck of room success:", data);
       setListDucks(data.data || []);
       setTotalDucks(data.data?.length || 0);
     });
-    socket.on(SocketEvents.ON.GET_DUCKS_OF_ROOM_FAILED, (data: AppResponse<null>) => {
-      console.log("Get duck of room fail: ", data);
-    });
+    socket.on(SocketEvents.ON.GET_DUCKS_OF_ROOM_FAILED, () => {});
     socket.on(SocketEvents.ON.REMOVE_USER_FROM_GAME_SUCCESS, (data: AppResponse<Room>) => {
       setCurrentRoom(data.data as Room);
       setListDucks(data.data?.ducks || []);
       setTotalDucks(data.data?.totalDuck || 0);
     });
-    socket.on(SocketEvents.ON.REMOVE_USER_FROM_GAME_FAILED, (data: AppResponse<null>) => {
-      console.log(data.errorMessage);
-    });
-    socket.on(SocketEvents.ON.ADD_DUCK_TO_ROOM_FAILED, (data: AppResponse<null>) => {
-      console.log(data.errorMessage);
-    });
-    socket.on(SocketEvents.ON.ADD_DUCK_TO_ROOM_SUCCESS, (data: AppResponse<IGame>) => {
-      console.log(data);
+    socket.on(SocketEvents.ON.REMOVE_USER_FROM_GAME_FAILED, () => {});
+    socket.on(SocketEvents.ON.ADD_DUCK_TO_ROOM_FAILED, () => {});
+    socket.on(SocketEvents.ON.ADD_DUCK_TO_ROOM_SUCCESS, () => {
       setAddDuckText("");
       setTabs("list-user");
     });
@@ -124,9 +111,7 @@ const GamePage = () => {
       setTotalDucks(data.data?.totalDuck || 0);
       setTabs("list-user");
     });
-    socket.on(SocketEvents.ON.UPDATE_LIST_DUCK_OF_ROOM_FAILED, (data: AppResponse<null>) => {
-      console.log(data.errorMessage);
-    });
+    socket.on(SocketEvents.ON.UPDATE_LIST_DUCK_OF_ROOM_FAILED, () => {});
     return () => {
       socket.off(SocketEvents.ON.GET_ROOM_INFO_SUCCESS);
       socket.off(SocketEvents.ON.GET_ROOM_INFO_FAILED);
@@ -181,7 +166,6 @@ const GamePage = () => {
       setTotalDucks(0);
       navigate(ROUTES.ROOM);
 
-      console.log("left room data", data);
       window.Mezon.WebView?.postEvent(
         "LEAVE_ROOM" as MezonWebViewEvent,
         {
@@ -199,12 +183,10 @@ const GamePage = () => {
           roomInfo: Room;
         }>
       ) => {
-        console.log("left room", data);
         setCurrentRoom(data.data?.roomInfo as Room);
       }
     );
-    socket.on(SocketEvents.ON.OUT_ROOM_FAILED, (data: AppResponse<null>) => {
-      console.log("GamePage -> data", data);
+    socket.on(SocketEvents.ON.OUT_ROOM_FAILED, () => {
       navigate(ROUTES.HOME);
     });
 
@@ -220,16 +202,11 @@ const GamePage = () => {
         countdownRef.current.startCountdown();
       }
     });
-    socket.on(SocketEvents.ON.START_GAME_FAILED, (data: AppResponse<null>) => {
-      console.log("GamePage -> data", data);
-    });
+    socket.on(SocketEvents.ON.START_GAME_FAILED, () => {});
     socket.on(SocketEvents.ON.START_TURN_SUCCESS, (data: AppResponse<Room>) => {
       setListDucks(data.data?.ducks || []);
-      console.log("GamePage -> startTurn", data);
     });
-    socket.on(SocketEvents.ON.START_TURN_FAILED, (data: AppResponse<null>) => {
-      console.log("GamePage -> data", data);
-    });
+    socket.on(SocketEvents.ON.START_TURN_FAILED, () => {});
     socket.on(SocketEvents.ON.CREATE_NEW_GAME_SUCCESS, (data: AppResponse<Room>) => {
       setCurrentRoom(data.data as Room);
       setListDucks(data.data?.ducks || []);
@@ -247,25 +224,17 @@ const GamePage = () => {
         countdownRef.current.resetCountdown();
       }
     });
-    socket.on(SocketEvents.ON.CREATE_NEW_GAME_FAILED, (data: AppResponse<null>) => {
-      console.log("reset game", data);
-      console.log("GamePage -> data", data);
-    });
+    socket.on(SocketEvents.ON.CREATE_NEW_GAME_FAILED, () => {});
     socket.on(SocketEvents.ON.CHANGE_TIME_SUCCESS, (data: AppResponse<Room>) => {
       setCurrentRoom(data.data as Room);
     });
-    socket.on(SocketEvents.ON.CHANGE_TIME_FAILED, (data: AppResponse<null>) => {
-      console.log("GamePage -> data", data);
-    });
+    socket.on(SocketEvents.ON.CHANGE_TIME_FAILED, () => {});
     socket.on(SocketEvents.ON.START_BET_SUCCESS, () => {
       setGameStatus("betting");
       setOpenModalBet(true);
     });
-    socket.on(SocketEvents.ON.START_BET_FAILED, (data: AppResponse<null>) => {
-      console.log("GamePage -> data", data);
-    });
-    socket.on(SocketEvents.ON.END_BET, (data: AppResponse<null>) => {
-      console.log("GamePage -> ENDBET", data);
+    socket.on(SocketEvents.ON.START_BET_FAILED, () => {});
+    socket.on(SocketEvents.ON.END_BET, () => {
       setOpenModalBet(false);
     });
     socket.on(SocketEvents.ON.START_GAME_NOW, () => {

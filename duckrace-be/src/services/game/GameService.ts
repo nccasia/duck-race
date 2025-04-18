@@ -8,30 +8,17 @@ import { IBetForDuckDTO } from "@/models/games/IBetForDuckDTO";
 import { IConfirmBet } from "@/models/games/IConfirmBet";
 import { ICreateGameSubmitDTO } from "@/models/games/ICreateGameSubmitDTO";
 import { generateId } from "@/utils/generateId";
-import JwtService from "../auth/JWTService";
-import PrismaService from "../database/PrismaService";
-import MezonClientService from "../mezon-client/MezonClientService";
-import RoomService from "../room/RoomService";
-import UserService from "../user/UserService";
 
 class GameService implements IGameService {
-  private static instance: GameService;
   private listGame: Game[] = [];
   private _roomService: IRoomService;
   private _userService: IUserService;
   private _mezonClientService: IMezonClientService;
 
-  constructor(UserService: IUserService) {
-    this._roomService = RoomService.getInstance();
+  constructor(UserService: IUserService, RoomService: IRoomService, MezonClientService: IMezonClientService) {
+    this._roomService = RoomService;
     this._userService = UserService;
-    this._mezonClientService = MezonClientService.getInstance();
-  }
-
-  public static getInstance(): GameService {
-    if (!GameService.instance) {
-      GameService.instance = new GameService(new UserService(new PrismaService(), new JwtService()));
-    }
-    return GameService.instance;
+    this._mezonClientService = MezonClientService;
   }
 
   public async createNewGame(gameData: ICreateGameSubmitDTO): Promise<ServiceResponse> {
@@ -242,55 +229,6 @@ class GameService implements IGameService {
     }
   }
 
-  private async rewardBetForDuck(currentGameId: string, winners: string[], winBet: number): Promise<ServiceResponse> {
-    if (!winners || winners.length === 0) {
-      return {
-        statusCode: 200,
-        isSuccess: true,
-        errorMessage: "No winners",
-      };
-    }
-    const API_KEY = process.env.API_KEY ?? "";
-    const MEZON_APP_ID = process.env.MEZON_APP_ID ?? "";
-    const url = process.env.REWARD_URL ?? "";
-    const headers = {
-      apiKey: API_KEY,
-      appId: MEZON_APP_ID,
-      "Content-Type": "application/json",
-    };
-
-    const data = {
-      sessionId: currentGameId,
-      userRewardedList: winners?.map((winner) => ({
-        userId: winner,
-        amount: winBet,
-      })),
-    };
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return {
-        statusCode: 200,
-        isSuccess: true,
-        errorMessage: "rewardBetForDuck success",
-      };
-    } catch (error) {
-      console.error("Error:", error);
-      return {
-        statusCode: 500,
-        isSuccess: false,
-        errorMessage: " rewardBetForDuck error",
-      };
-    }
-  }
   public async endGame(gameId: string): Promise<ServiceResponse> {
     try {
       if (!gameId) {

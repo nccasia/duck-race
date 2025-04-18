@@ -27,8 +27,6 @@ const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
   }, [isCompletedAll, setOpenModalBet, setOpenModalShowResult]);
   const handleOpenModalShowRank = () => {
     setOpenModalShowRank(true);
-    console.log("openModalShowRank", openModalShowResult);
-    // setOpenModalShowResult(false);
   };
   return (
     <Dialog open={openModalShowResult}>
