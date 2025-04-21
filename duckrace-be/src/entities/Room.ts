@@ -6,6 +6,7 @@ class RoomInfo {
   public roomBet: number;
   public roomPassword: string;
   public roomUsePassword: boolean;
+  public isBetting: boolean;
 }
 class Score {
   public oldScore: number;

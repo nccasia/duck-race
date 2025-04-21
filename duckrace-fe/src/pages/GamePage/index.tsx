@@ -1,7 +1,8 @@
 import Loading from "@/components/Loading";
+import UserInformation from "@/components/UserInformation";
 import { SocketEvents } from "@/constants/SocketEvents";
 import { AppResponse } from "@/interface/app/AppResponse";
-import { BettorOfDucks, DuckPicked } from "@/interface/game/Game";
+import { BetForDuckResponse, BettorOfDucks, DuckPicked } from "@/interface/game/Game";
 import { IDuck, IMezonClan, IMezonUser, Room } from "@/interface/room/Room";
 import { User } from "@/interface/user/User";
 import { useSocket } from "@/providers/SocketProvider";
@@ -27,6 +28,7 @@ const GamePage = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const gameId = searchParams.get("gameId");
+  const { changeWallet, currentUser } = useUserStore();
   const { roomId } = useParams();
   const navigate = useNavigate();
   const listDuckPickedRef = useRef<DuckPicked[]>([]);
@@ -60,9 +62,9 @@ const GamePage = () => {
     setOpenModalShowResult,
     setRoomMembers,
   } = useRoomStore();
-  const { currentUser } = useUserStore();
   const [listDuckToShow, setListDuckToShow] = useState<IDuck[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isOpenPopoverConfirmBet, setIsOpenPopoverConfirmBet] = useState<boolean>(false);
   useEffect(() => {
     if (!socket || !roomId) return;
     socket.emit(SocketEvents.EMIT.GET_ROOM_INFO, roomId);
@@ -246,8 +248,15 @@ const GamePage = () => {
       setGameStatus("racing");
     });
     socket.on(SocketEvents.ON.GET_GAME_BETTORS_SUCCESS, (data: AppResponse<BettorOfDucks[]>) => {
-      console.log("GamePage -> data", data);
       setListBettorOfDucks(data.data || []);
+    });
+    socket.on(SocketEvents.ON.BET_FOR_DUCK_SUCCESS, (data: AppResponse<BetForDuckResponse>) => {
+      setIsOpenPopoverConfirmBet(false);
+      toast.success("You have bet for duck successfully");
+      if (currentUser.wallet && data.data?.betAmount) {
+        changeWallet(currentUser.wallet - data.data?.betAmount);
+      }
+      setIsConfirmedBet(true);
     });
     return () => {
       socket.off(SocketEvents.ON.START_GAME_SUCCESS);
@@ -266,6 +275,7 @@ const GamePage = () => {
       socket.off(SocketEvents.ON.START_GAME_NOW);
       socket.off(SocketEvents.ON.GET_GAME_BETTORS_SUCCESS);
       socket.off(SocketEvents.ON.USER_LEFT_ROOM);
+      socket.off(SocketEvents.ON.BET_FOR_DUCK_SUCCESS);
     };
   }, [
     setListDucks,
@@ -287,6 +297,9 @@ const GamePage = () => {
     setOpenModalShowResult,
     setListDuckPicked,
     setIsConfirmedBet,
+    setIsOpenPopoverConfirmBet,
+    currentUser.wallet,
+    changeWallet,
   ]);
 
   useEffect(() => {
@@ -360,8 +373,8 @@ const GamePage = () => {
       toast.warning("You are not the owner of this room");
       return;
     }
-    if (listDucks.length < 5) {
-      toast.warning("You need at least 5 ducks to start the game");
+    if (listDucks.length < 6) {
+      toast.warning("You need at least 6 ducks to start the game");
       return;
     }
     socket.emit(SocketEvents.EMIT.START_BET, {
@@ -477,7 +490,7 @@ const GamePage = () => {
         {currentRoom?.ownerId === currentUser.id ? (
           <>
             <ModalShowResult onResetGame={handleResetGame} />
-            <ModalBet />
+            <ModalBet isPopoverOpen={isOpenPopoverConfirmBet} setIsPopoverOpen={setIsOpenPopoverConfirmBet} />
             <ModalUser />
             <ModalSetup />
             <ModalShowRank />
@@ -486,9 +499,12 @@ const GamePage = () => {
           <>
             <ModalShowResult onResetGame={handleResetGame} />
             <ModalShowRank />
-            <ModalBet />
+            <ModalBet isPopoverOpen={isOpenPopoverConfirmBet} setIsPopoverOpen={setIsOpenPopoverConfirmBet} />
           </>
         )}
+        <div className='fixed top-3 right-3'>
+          <UserInformation />
+        </div>
       </div>
     </div>
   );

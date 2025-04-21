@@ -151,7 +151,7 @@ class RoomService implements IRoomService {
     if (!user || !user.isSuccess) {
       return user;
     }
-    if ((user.data as User).wallet < room.roomInfo.roomBet) {
+    if ((user.data as User).wallet < room.roomInfo.roomBet && room.roomInfo.isBetting) {
       return {
         statusCode: 400,
         isSuccess: false,
@@ -259,14 +259,14 @@ class RoomService implements IRoomService {
   public async createRoomAsync(room: CreateRoomSubmitDTO): Promise<ServiceResponse> {
     // Implementation here
     try {
-      if (!room.roomName || !room.roomBet) {
+      if (!room.roomName || room.roomBet < 0) {
         return {
           statusCode: 400,
           isSuccess: false,
           errorMessage: "Please check your data",
         };
       }
-      if (room.roomBet <= 0) {
+      if (room.roomBet < 0) {
         return {
           statusCode: 400,
           isSuccess: false,
@@ -285,10 +285,18 @@ class RoomService implements IRoomService {
       if (!owner || !owner.isSuccess) {
         return owner;
       }
+      if (owner.data.wallet < room.roomBet && room.isBetting) {
+        return {
+          statusCode: 400,
+          isSuccess: false,
+          errorMessage: "You don't have enough money to create this room",
+        };
+      }
       const newRoom = new Room();
       const roomId = generateId(6, "number");
       newRoom.roomInfo = {
         roomId,
+        isBetting: room.isBetting,
         roomName: room.roomName,
         roomBet: +room.roomBet,
         roomPassword: room.roomPassword,

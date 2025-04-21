@@ -289,10 +289,11 @@ class SocketService implements ISocketService {
                   winners: endGameResponse.data.winners,
                   gameId: data.gameId,
                   totalBet: endGameResponse.data.totalBet,
-                  winBet:
+                  winBet: Math.floor(
                     endGameResponse.data.winners.length > 0
                       ? endGameResponse.data.totalBet / endGameResponse.data.winners.length
-                      : endGameResponse.data.totalBet / (endGameResponse.data.bettors.length || 1),
+                      : endGameResponse.data.totalBet / (endGameResponse.data.bettors.length || 1)
+                  ),
                   bettors: endGameResponse.data.bettors,
                 };
                 this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.END_GAME_SUCCESS, dataEmit);
@@ -335,17 +336,28 @@ class SocketService implements ISocketService {
       socket.emit(SocketEvents.EMIT.START_BET_FAILED, { errorMessage: "gameId is required" });
       return;
     }
+    const roomInfo = await this._roomService.getRoomById(data.roomId);
+    if (!roomInfo.isSuccess) {
+      console.log(`User ${socket.id} start bet failed: ${roomInfo.errorMessage}`);
+      socket.emit(SocketEvents.EMIT.START_BET_FAILED, roomInfo);
+      return;
+    }
+    const roomData = roomInfo.data as Room;
+    if (!roomData.roomInfo.isBetting) {
+      socket.emit(SocketEvents.EMIT.START_GAME_NOW, data);
+      return;
+    }
     const startBetResponse = await this._roomService.startBet(data.roomId);
-    if (startBetResponse.isSuccess) {
-      this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.START_BET_SUCCESS, startBetResponse);
-      setTimeout(() => {
-        this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.END_BET, data);
-        socket.emit(SocketEvents.EMIT.START_GAME_NOW, data);
-      }, 30000);
-    } else {
+    if (!startBetResponse.isSuccess) {
       console.log(`User ${socket.id} start bet failed: ${startBetResponse.errorMessage}`);
       socket.emit(SocketEvents.EMIT.START_BET_FAILED, startBetResponse);
+      return;
     }
+    this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.START_BET_SUCCESS, startBetResponse);
+    setTimeout(() => {
+      this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.END_BET, data);
+      socket.emit(SocketEvents.EMIT.START_GAME_NOW, data);
+    }, 30000);
   };
 
   onGetGameBettors = async (socket: Socket, gameId: string) => {
@@ -365,7 +377,16 @@ class SocketService implements ISocketService {
       console.log(`User ${socket.id} bet for duck`);
       const gameBettors = await this._gameService.getGameBettors(data.gameId);
       this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.GET_GAME_BETTORS_SUCCESS, gameBettors);
-      socket.emit(SocketEvents.EMIT.BET_FOR_DUCK_SUCCESS, betForDuckResponse);
+      socket.emit(SocketEvents.EMIT.BET_FOR_DUCK_SUCCESS, {
+        statusCode: 200,
+        isSuccess: true,
+        errorMessage: "Bet for duck successfully",
+        data: {
+          ducks: betForDuckResponse.data.ducks,
+          betAmount: data.betAmount * data.ducks.length,
+          gameId: data.gameId,
+        },
+      });
     } else {
       console.log(`User ${socket.id} bet for duck failed: ${betForDuckResponse.errorMessage}`);
       socket.emit(SocketEvents.EMIT.BET_FOR_DUCK_FAILED, betForDuckResponse);

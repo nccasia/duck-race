@@ -3,10 +3,12 @@ import { IGameResult } from "@/interface/game/Game";
 import { useSocket } from "@/providers/SocketProvider";
 import useGameStore from "@/stores/gameStore"; // Giả sử bạn có store để quản lý state
 import useRoomStore from "@/stores/roomStore";
+import useUserStore from "@/stores/userStore";
 import { useEffect, useRef } from "react";
 
 const ListPlayer = () => {
   const socket = useSocket();
+  const { currentUser, changeWallet } = useUserStore();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const duckImagesRef = useRef<HTMLImageElement[]>([]);
   const backgroundImageRef1 = useRef<HTMLImageElement | null>(null); // Lưu hình ảnh nền
@@ -41,11 +43,20 @@ const ListPlayer = () => {
       isEndGameRef.current = true;
       setGameStatus("completed");
       setGameResult(data);
+      if (currentUser?.wallet === undefined) return;
+      if (data.winners?.length > 0 && data.winners?.includes(currentUser?.id ?? "")) {
+        changeWallet(currentUser.wallet + data.winBet);
+        return;
+      }
+      if (data.bettors?.length > 0 && data.winners.length === 0 && data.bettors?.includes(currentUser?.id ?? "")) {
+        changeWallet(currentUser.wallet + data.winBet);
+        return;
+      }
     });
     return () => {
       socket.off(SocketEvents.ON.END_GAME_SUCCESS);
     };
-  }, [setGameStatus, socket]);
+  }, [changeWallet, currentUser?.id, currentUser.wallet, setGameResult, setGameStatus, socket]);
 
   useEffect(() => {
     resetGameRef.current = isResetGame;
@@ -113,21 +124,6 @@ const ListPlayer = () => {
     }
   }, [gameStatus]);
   useEffect(() => {
-    // const canvas = canvasRef.current;
-    // console.log("height", window.innerHeight);
-    // console.log("canvas height", canvas?.height);
-    // const context = canvas?.getContext("2d");
-    // const ratio = window.devicePixelRatio || 1;
-    // if (!context || !backgroundImageRef1.current || !canvas) return;
-
-    // // Đặt kích thước thật của canvas theo pixel
-    // canvas.width = canvas.offsetWidth * ratio;
-    // canvas.height = canvas.offsetHeight * ratio;
-
-    // // Đặt scale để các phần tử vẽ không bị mờ
-    // if (context) {
-    //   context.scale(ratio, ratio);
-    // }
     const canvas = canvasRef.current;
     const context = canvas?.getContext("2d");
     if (!context || !backgroundImageRef1.current || !canvas) return;
@@ -175,27 +171,6 @@ const ListPlayer = () => {
       // Cập nhật vị trí của background
       background1Position.current = background1X;
       background2Position.current = background2X;
-
-      // Vẽ 10 đường sóng nước
-      // const waveFrequency = 0.01;
-      // for (let i = 0; i < 20; i++) {
-      //   const waveAmplitude = 5 + i;
-      //   const waveSpeed = 0.0008;
-
-      //   // Sóng lẻ chạy ngược chiều sóng chẵn
-      //   const waveDirection = i % 2 === 0 ? 1 : -1;
-      //   const waveOffsetY = 200 + (i * (canvas.height - 200)) / 20;
-      //   const waveOffset = timestamp * waveSpeed * waveDirection;
-
-      //   context.beginPath();
-      //   for (let x = 0; x < canvas.width; x++) {
-      //     const y = Math.sin(x * waveFrequency + waveOffset) * waveAmplitude + waveOffsetY;
-      //     context.lineTo(x, y);
-      //   }
-      //   context.strokeStyle = `rgba(0, 191, 255, ${2 - i * 0.05})`;
-      //   context.lineWidth = 2;
-      //   context.stroke();
-      // }
 
       // Vẽ vạch đích
       const endGameLineSpeed = 0.5;

@@ -3,6 +3,7 @@ import { User } from "../user/User";
 export interface ICreateRoomData {
   roomName: string;
   roomBet: number;
+  isBetting: boolean;
   ownerId?: string;
 }
 export interface IScore {

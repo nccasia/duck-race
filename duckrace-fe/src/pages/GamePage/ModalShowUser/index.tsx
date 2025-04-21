@@ -45,7 +45,7 @@ const ModalUser = () => {
   return (
     <Dialog open={openModalShowUser} onOpenChange={handleChangeOpenModalShowUser}>
       <DialogTrigger asChild>
-        <div className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-[70px] right-[80px] hover:scale-[0.98] transition-all active:scale-[1.0]'>
+        <div className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-0 left-[150px] hover:scale-[0.98] transition-all active:scale-[1.0]'>
           <img src='/Buttons/SmallButton.png' />
           <img className='w-[20px] absolute top-[10px] left-[20px]' src='/Icons/ProfileIcon.png' />
         </div>

@@ -1,16 +1,22 @@
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SocketEvents } from "@/constants/SocketEvents";
+import { DuckPicked } from "@/interface/game/Game";
 import { useSocket } from "@/providers/SocketProvider";
 import useGameStore from "@/stores/gameStore";
 import useRoomStore from "@/stores/roomStore";
 import useUserStore from "@/stores/userStore";
-import { MezonWebViewEvent } from "@/types/webview";
-import { useEffect, useState } from "react";
-const ModalBet = () => {
+import { useEffect, useRef, useState } from "react";
+
+interface ModalBetProps {
+  isPopoverOpen: boolean;
+  setIsPopoverOpen: (isOpen: boolean) => void;
+}
+const ModalBet = ({ isPopoverOpen, setIsPopoverOpen }: ModalBetProps) => {
   const [timeCountDown, setTimeCountDown] = useState<number | null>(30);
   const [isActive, setIsActive] = useState(false);
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const listDuckPickedRef = useRef<DuckPicked[]>([]);
+
   const { gameStatus, openModalBet, setOpenModalBet, listBettorOfDucks, listDuckPicked, setListDuckPicked, isConfirmedBet } =
     useGameStore();
   const { currentRoom } = useRoomStore();
@@ -42,22 +48,19 @@ const ModalBet = () => {
   };
   const handleConfirmBet = () => {
     if (!socket) return;
-    const amount = listDuckPicked.length * (currentRoom?.roomInfo.roomBet ?? 1);
-    const dataEmit = {
-      receiver_id: import.meta.env.VITE_MEZON_APP_ID,
-      amount,
-      note: `Đã đặt cược ${amount} token khi chơi game duckrace!`,
-      sender_id: currentUser.id,
-      sender_name: currentUser.userName,
-      extra_attribute: JSON.stringify({
-        sessionId: currentRoom?.currentGame,
-        appId: import.meta.env.VITE_MEZON_APP_ID,
-      }),
-    };
-    setIsPopoverOpen(false);
-    window.Mezon.WebView?.postEvent("SEND_TOKEN" as MezonWebViewEvent, dataEmit, () => {});
+
+    socket.emit(SocketEvents.EMIT.BET_FOR_DUCK, {
+      ducks: listDuckPickedRef.current?.map((duck) => duck.duckId),
+      gameId: currentRoom?.currentGame,
+      userId: currentUser.id,
+      betAmount: currentRoom?.roomInfo.roomBet ?? 1,
+      roomId: currentRoom?.roomId,
+    });
   };
 
+  useEffect(() => {
+    listDuckPickedRef.current = listDuckPicked;
+  }, [listDuckPicked]);
   useEffect(() => {
     if (!socket || !currentRoom?.currentGame) return;
     socket.emit(SocketEvents.EMIT.GET_GAME_BETTORS, currentRoom?.currentGame);
@@ -94,7 +97,7 @@ const ModalBet = () => {
       <DialogTrigger asChild>
         <div
           onClick={() => setOpenModalBet(true)}
-          className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-0 right-2 hover:scale-[0.98] transition-all active:scale-[1.0]'
+          className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-[70px] left-2 hover:scale-[0.98] transition-all active:scale-[1.0]'
         >
           <img src='/Buttons/SmallButton.png' />
           <img className='w-[30px] absolute top-[13px] left-[15px]' src='/Icons/GameIcon.png' />

@@ -101,6 +101,21 @@ class GameService implements IGameService {
           errorMessage: "Game is not found",
         };
       }
+      const userInfo = await this._userService.getUserById(betData.userId);
+      if (!userInfo.isSuccess) {
+        return {
+          statusCode: 404,
+          isSuccess: false,
+          errorMessage: "User is not found",
+        };
+      }
+      if (userInfo.data.wallet < betData.betAmount * betData.ducks.length) {
+        return {
+          statusCode: 400,
+          isSuccess: false,
+          errorMessage: "Not enough token",
+        };
+      }
       betData.ducks.forEach((duckId) => {
         const checkBet = game.gameBettors.find((bettor) => bettor.userId === betData.userId && bettor.duckId === duckId);
         if (!checkBet) {
@@ -117,6 +132,15 @@ class GameService implements IGameService {
       if (!game.bettors.includes(betData.userId)) {
         game.bettors.push(betData.userId);
       }
+
+      const updateWalletResponse = await this._userService.updateWalletToken(
+        betData.userId,
+        -betData.betAmount * betData.ducks.length
+      );
+      if (!updateWalletResponse.isSuccess) {
+        return updateWalletResponse;
+      }
+
       return {
         statusCode: 200,
         isSuccess: true,
@@ -216,9 +240,39 @@ class GameService implements IGameService {
 
   public async rewardToken(winners: string[], winBet: number): Promise<ServiceResponse> {
     try {
-      const data = await this._mezonClientService.rewardTokenForUser(winners, winBet);
-      console.log("data", data);
-      return data;
+      if (!winners || winners.length === 0 || !winBet) {
+        return {
+          statusCode: 200,
+          isSuccess: true,
+          errorMessage: "No one wins",
+        };
+      }
+      const result = await Promise.all(
+        winners.map(async (winnerId: string) => {
+          const userResponse = await this._userService.getUserById(winnerId);
+          if (!userResponse.isSuccess) {
+            return userResponse;
+          }
+
+          const updateWalletResponse = await this._userService.updateWalletToken(winnerId, winBet);
+          if (!updateWalletResponse.isSuccess) {
+            return updateWalletResponse;
+          }
+          return {
+            statusCode: 200,
+            isSuccess: true,
+            data: {
+              userId: winnerId,
+              winBet: winBet,
+            },
+          };
+        })
+      );
+      return {
+        statusCode: 200,
+        isSuccess: true,
+        data: result.map((res) => res.data),
+      };
     } catch (error) {
       console.error("Error:", error);
       return {
@@ -260,9 +314,9 @@ class GameService implements IGameService {
       const listWinner = game.gameBettors.filter((bettor) => bettor.duckId === duckWinner);
       game.winners = listWinner.map((winner) => winner.userId);
       if (game.winners.length > 0) {
-        await this._mezonClientService.rewardTokenForUser(game.winners, game.totalBet / game.winners.length);
+        await this.rewardToken(game.winners, game.totalBet / game.winners.length);
       } else {
-        await this._mezonClientService.rewardTokenForUser(game.bettors, game.totalBet / game.bettors.length);
+        await this.rewardToken(game.bettors, game.totalBet / game.bettors.length);
       }
       return {
         statusCode: 200,

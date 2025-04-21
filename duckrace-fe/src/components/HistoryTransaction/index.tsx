@@ -27,7 +27,6 @@ const HistoryTransaction = ({ openModalHistory, setOpenModalHistory }: HistoryTr
     };
     getHistoryTransaction();
   }, [changeHistoryTransaction, currentUser.id]);
-  console.log("historyTransaction", historyTransaction);
   return (
     <Dialog open={openModalHistory} onOpenChange={setOpenModalHistory}>
       <DialogTrigger asChild></DialogTrigger>
