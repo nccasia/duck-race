@@ -30,11 +30,8 @@ const RoomPage = () => {
     socket.on(SocketEvents.ON.GET_LIST_ROOMS_SUCCESS, (data: AppResponse<Room[]>) => {
       setListRoom(data.data as Room[]);
     });
-    socket.on(SocketEvents.ON.GET_LIST_ROOMS_FAILED, (data: AppResponse<Room[]>) => {
-      console.log("Get list rooms failed", data);
-    });
+    socket.on(SocketEvents.ON.GET_LIST_ROOMS_FAILED, () => {});
     socket.on(SocketEvents.ON.JOIN_ROOM_SUCCESS, (data: AppResponse<Room>) => {
-      console.log("Join room success", data);
       window.Mezon.WebView?.postEvent(
         "JOIN_ROOM" as MezonWebViewEvent,
         {

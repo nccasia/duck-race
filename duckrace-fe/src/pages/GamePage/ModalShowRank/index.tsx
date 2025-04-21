@@ -25,7 +25,7 @@ const ModalShowRank = () => {
       <DialogTrigger asChild>
         <div
           onClick={() => handleOpenModalShowRank(true)}
-          className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-0 right-[80px] hover:scale-[0.98] transition-all active:scale-[1.0]'
+          className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-[70px] left-[80px] hover:scale-[0.98] transition-all active:scale-[1.0]'
         >
           <img src='/Buttons/SmallButton.png' />
           <img className='w-[25px] absolute top-[10px] left-[18px]' src='/Icons/MedalIcon.png' />

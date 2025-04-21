@@ -14,6 +14,12 @@ export interface BettorOfDucks extends IDuck {
   bettors: BettorDetail[];
 }
 
+export interface BetForDuckResponse {
+  ducks: string[];
+  betAmount: number;
+  gameId: string;
+}
+
 export interface DuckPicked {
   duckId: string;
   duckName: string;

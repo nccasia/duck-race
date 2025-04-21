@@ -47,4 +47,6 @@ export class CreateRoomSubmitDTO {
   public roomPassword: string;
   @Expose()
   public roomUsePassword: boolean;
+  @Expose()
+  public isBetting: boolean;
 }

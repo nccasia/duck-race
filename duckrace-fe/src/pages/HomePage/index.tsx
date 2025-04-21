@@ -1,3 +1,4 @@
+import UserInformation from "@/components/UserInformation";
 import { ROUTES } from "@/routes/path";
 import { useNavigate } from "react-router-dom";
 
@@ -8,6 +9,9 @@ const HomePage = () => {
   };
   return (
     <div className='h-full w-full bg-gradient-to-b from-teal-100 via-teal-300 to-teal-200 bg-center bg-no-repeat rounded-lg p-2 relative flex justify-center items-center '>
+      <div className='fixed top-3 right-3'>
+        <UserInformation />
+      </div>
       <div className='flex justify-center items-center relative w-[400px] sm:w-[600px] h-[600px]'>
         <img src='/bg-home.webp' alt='duck' className='w-full max-w-[400px] sm:max-w-[600px]' />
         <span

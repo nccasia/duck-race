@@ -43,7 +43,8 @@ interface RoomState {
 const useRoomStore = create<RoomState>((set) => ({
   createRoomData: {
     roomName: "",
-    roomBet: 1,
+    roomBet: 0,
+    isBetting: false,
   },
   listRoom: [],
   currentRoom: null,
@@ -62,7 +63,7 @@ const useRoomStore = create<RoomState>((set) => ({
   openModalCreateRoom: false,
 
   setCreateRoomData: (data: ICreateRoomData) => set({ createRoomData: data }),
-  resetCreateRoomData: () => set({ createRoomData: { roomName: "", roomBet: 1 } }),
+  resetCreateRoomData: () => set({ createRoomData: { roomName: "", roomBet: 0, isBetting: false } }),
   setListRoom: (data: Room[]) => set({ listRoom: data }),
   setCurrentRoom: (data: Room | null) => set({ currentRoom: data }),
   setRoomMembers: (data: User[]) => set({ roomMembers: data }),

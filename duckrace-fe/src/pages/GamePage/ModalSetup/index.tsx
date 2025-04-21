@@ -3,8 +3,7 @@ import { SocketEvents } from "@/constants/SocketEvents";
 import { useSocket } from "@/providers/SocketProvider";
 import useGameStore from "@/stores/gameStore";
 import useRoomStore from "@/stores/roomStore";
-import { useEffect, useState } from "react";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface TimeInput {
   position1: number;
@@ -94,7 +93,7 @@ const ModalSetup = () => {
       <DialogTrigger asChild>
         <div
           onClick={() => handleOpenModalSetup(true)}
-          className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-[70px] right-2 hover:scale-[0.98] transition-all active:scale-[1.0]'
+          className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-[70px] left-[150px] hover:scale-[0.98] transition-all active:scale-[1.0]'
         >
           <img src='/Buttons/SmallButton.png' />
           <img className='w-[30px] absolute top-[10px] left-[15px]' src='/Icons/TimeIcon.png' />

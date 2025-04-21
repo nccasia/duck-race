@@ -10,21 +10,13 @@ import { IRemoveDuckDTO } from "@/models/rooms/IRemoveDuckDTO";
 import { IStartGameSubmitDTO } from "@/models/rooms/IStartGameSubmitDTO";
 import { IUpdateListDuckDTO } from "@/models/rooms/IUpdateListDuckDTO";
 import { generateId } from "@/utils/generateId";
-import UserService from "../user/UserService";
 
 class RoomService implements IRoomService {
-  private static instance: RoomService;
   private listRooms: Array<Room> = [];
   private _userService: IUserService;
-  private constructor() {
-    this._userService = UserService.getInstance();
-  }
 
-  public static getInstance(): RoomService {
-    if (!RoomService.instance) {
-      RoomService.instance = new RoomService();
-    }
-    return RoomService.instance;
+  constructor(UserService: IUserService) {
+    this._userService = UserService;
   }
 
   private randomDuckArray(ducks: Duck[]): Duck[] {
@@ -159,7 +151,7 @@ class RoomService implements IRoomService {
     if (!user || !user.isSuccess) {
       return user;
     }
-    if ((user.data as User).wallet < room.roomInfo.roomBet) {
+    if ((user.data as User).wallet < room.roomInfo.roomBet && room.roomInfo.isBetting) {
       return {
         statusCode: 400,
         isSuccess: false,
@@ -243,7 +235,8 @@ class RoomService implements IRoomService {
       if (!room.isSuccess) {
         return room;
       }
-      const listUsers = this._userService.getListUsers();
+      const listUserResponse = await this._userService.getListUsers();
+      const listUsers = listUserResponse.data as User[];
       const listMembers = room.data?.members?.map((userId: string) => {
         const user = listUsers.find((user) => user.id === userId);
         return user;
@@ -266,14 +259,14 @@ class RoomService implements IRoomService {
   public async createRoomAsync(room: CreateRoomSubmitDTO): Promise<ServiceResponse> {
     // Implementation here
     try {
-      if (!room.roomName || !room.roomBet) {
+      if (!room.roomName || room.roomBet < 0) {
         return {
           statusCode: 400,
           isSuccess: false,
           errorMessage: "Please check your data",
         };
       }
-      if (room.roomBet <= 0) {
+      if (room.roomBet < 0) {
         return {
           statusCode: 400,
           isSuccess: false,
@@ -292,10 +285,18 @@ class RoomService implements IRoomService {
       if (!owner || !owner.isSuccess) {
         return owner;
       }
+      if (owner.data.wallet < room.roomBet && room.isBetting) {
+        return {
+          statusCode: 400,
+          isSuccess: false,
+          errorMessage: "You don't have enough money to create this room",
+        };
+      }
       const newRoom = new Room();
       const roomId = generateId(6, "number");
       newRoom.roomInfo = {
         roomId,
+        isBetting: room.isBetting,
         roomName: room.roomName,
         roomBet: +room.roomBet,
         roomPassword: room.roomPassword,

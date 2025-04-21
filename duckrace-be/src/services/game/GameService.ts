@@ -8,28 +8,17 @@ import { IBetForDuckDTO } from "@/models/games/IBetForDuckDTO";
 import { IConfirmBet } from "@/models/games/IConfirmBet";
 import { ICreateGameSubmitDTO } from "@/models/games/ICreateGameSubmitDTO";
 import { generateId } from "@/utils/generateId";
-import MezonClientService from "../mezon-client/MezonClientService";
-import RoomService from "../room/RoomService";
-import UserService from "../user/UserService";
 
 class GameService implements IGameService {
-  private static instance: GameService;
   private listGame: Game[] = [];
   private _roomService: IRoomService;
   private _userService: IUserService;
   private _mezonClientService: IMezonClientService;
 
-  constructor() {
-    this._roomService = RoomService.getInstance();
-    this._userService = UserService.getInstance();
-    this._mezonClientService = MezonClientService.getInstance();
-  }
-
-  public static getInstance(): GameService {
-    if (!GameService.instance) {
-      GameService.instance = new GameService();
-    }
-    return GameService.instance;
+  constructor(UserService: IUserService, RoomService: IRoomService, MezonClientService: IMezonClientService) {
+    this._roomService = RoomService;
+    this._userService = UserService;
+    this._mezonClientService = MezonClientService;
   }
 
   public async createNewGame(gameData: ICreateGameSubmitDTO): Promise<ServiceResponse> {
@@ -112,6 +101,21 @@ class GameService implements IGameService {
           errorMessage: "Game is not found",
         };
       }
+      const userInfo = await this._userService.getUserById(betData.userId);
+      if (!userInfo.isSuccess) {
+        return {
+          statusCode: 404,
+          isSuccess: false,
+          errorMessage: "User is not found",
+        };
+      }
+      if (userInfo.data.wallet < betData.betAmount * betData.ducks.length) {
+        return {
+          statusCode: 400,
+          isSuccess: false,
+          errorMessage: "Not enough token",
+        };
+      }
       betData.ducks.forEach((duckId) => {
         const checkBet = game.gameBettors.find((bettor) => bettor.userId === betData.userId && bettor.duckId === duckId);
         if (!checkBet) {
@@ -128,6 +132,15 @@ class GameService implements IGameService {
       if (!game.bettors.includes(betData.userId)) {
         game.bettors.push(betData.userId);
       }
+
+      const updateWalletResponse = await this._userService.updateWalletToken(
+        betData.userId,
+        -betData.betAmount * betData.ducks.length
+      );
+      if (!updateWalletResponse.isSuccess) {
+        return updateWalletResponse;
+      }
+
       return {
         statusCode: 200,
         isSuccess: true,
@@ -192,7 +205,8 @@ class GameService implements IGameService {
           errorMessage: "Game is not found",
         };
       }
-      const listUser = this._userService.getListUsers();
+      const listUserResponse = this._userService.getListUsers();
+      const listUser = (await listUserResponse).data as User[];
       const ducksResponse = await this._roomService.getDucksOfRoom(game.roomId);
       const listDucks = ducksResponse.data;
       const gameBettors: BettorOfDucks[] = listDucks?.map((duck) => {
@@ -226,58 +240,38 @@ class GameService implements IGameService {
 
   public async rewardToken(winners: string[], winBet: number): Promise<ServiceResponse> {
     try {
-      const data = await this._mezonClientService.rewardTokenForUser(winners, winBet);
-      console.log("data", data);
-      return data;
-    } catch (error) {
-      console.error("Error:", error);
-      return {
-        statusCode: 500,
-        isSuccess: false,
-        errorMessage: " rewardBetForDuck error",
-      };
-    }
-  }
-
-  private async rewardBetForDuck(currentGameId: string, winners: string[], winBet: number): Promise<ServiceResponse> {
-    if (!winners || winners.length === 0) {
-      return {
-        statusCode: 200,
-        isSuccess: true,
-        errorMessage: "No winners",
-      };
-    }
-    const API_KEY = process.env.API_KEY ?? "";
-    const MEZON_APP_ID = process.env.MEZON_APP_ID ?? "";
-    const url = process.env.REWARD_URL ?? "";
-    const headers = {
-      apiKey: API_KEY,
-      appId: MEZON_APP_ID,
-      "Content-Type": "application/json",
-    };
-
-    const data = {
-      sessionId: currentGameId,
-      userRewardedList: winners?.map((winner) => ({
-        userId: winner,
-        amount: winBet,
-      })),
-    };
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!winners || winners.length === 0 || !winBet) {
+        return {
+          statusCode: 200,
+          isSuccess: true,
+          errorMessage: "No one wins",
+        };
       }
+      const result = await Promise.all(
+        winners.map(async (winnerId: string) => {
+          const userResponse = await this._userService.getUserById(winnerId);
+          if (!userResponse.isSuccess) {
+            return userResponse;
+          }
 
-      const result = await response.json();
+          const updateWalletResponse = await this._userService.updateWalletToken(winnerId, winBet);
+          if (!updateWalletResponse.isSuccess) {
+            return updateWalletResponse;
+          }
+          return {
+            statusCode: 200,
+            isSuccess: true,
+            data: {
+              userId: winnerId,
+              winBet: winBet,
+            },
+          };
+        })
+      );
       return {
         statusCode: 200,
         isSuccess: true,
-        errorMessage: "rewardBetForDuck success",
+        data: result.map((res) => res.data),
       };
     } catch (error) {
       console.error("Error:", error);
@@ -288,6 +282,7 @@ class GameService implements IGameService {
       };
     }
   }
+
   public async endGame(gameId: string): Promise<ServiceResponse> {
     try {
       if (!gameId) {
@@ -319,9 +314,9 @@ class GameService implements IGameService {
       const listWinner = game.gameBettors.filter((bettor) => bettor.duckId === duckWinner);
       game.winners = listWinner.map((winner) => winner.userId);
       if (game.winners.length > 0) {
-        await this._mezonClientService.rewardTokenForUser(game.winners, game.totalBet / game.winners.length);
+        await this.rewardToken(game.winners, game.totalBet / game.winners.length);
       } else {
-        await this._mezonClientService.rewardTokenForUser(game.bettors, game.totalBet / game.bettors.length);
+        await this.rewardToken(game.bettors, game.totalBet / game.bettors.length);
       }
       return {
         statusCode: 200,

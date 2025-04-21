@@ -12,9 +12,8 @@ const ModalCreateRoom = () => {
   const { createRoomData, setCreateRoomData, resetCreateRoomData, openModalCreateRoom, setOpenModalCreateRoom } = useRoomStore();
   const { currentUser } = useUserStore();
   const socket = useSocket();
-  const handleChangeValue = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
-    const value = e.target.value;
-    if (field === "roomBet" && !/^\d*$/.test(value)) {
+  const handleChangeValue = (value: string | boolean, field: string) => {
+    if (field === "roomBet" && typeof value !== "boolean" && !/^\d*$/.test(value)) {
       return; // Ngăn không cho nhập ký tự không phải số
     }
     const newData = {
@@ -32,8 +31,9 @@ const ModalCreateRoom = () => {
   );
 
   const handleCreateNewRoom = () => {
+    console.log("create room data", createRoomData);
     if (!socket) return;
-    if (!createRoomData.roomName || !createRoomData.roomBet || createRoomData.roomBet <= 0) {
+    if (!createRoomData.roomName || createRoomData.roomBet < 0 || (createRoomData.roomBet <= 0 && createRoomData.isBetting)) {
       toast.warning("Please fill in all fields");
       return;
     }
@@ -76,26 +76,38 @@ const ModalCreateRoom = () => {
       </DialogTrigger>
       <DialogContent aria-describedby='modal-description' aria-labelledby='modal-title' role='dialog'>
         <DialogTitle className='text-center text-[20px] hidden'>Tạo phòng</DialogTitle>
-        <div className='w-[370px] h-[500px] rounded-lg p-10 bg-[url("/Rooms/create-room-modal-bg.png")] bg-center bg-cover font-titan flex justify-center items-center flex-col gap-5'>
+        <div className='w-[370px] h-[500px] rounded-lg p-10 bg-[url("/Rooms/create-room-modal-bg.png")] bg-center bg-cover font-titan flex pt-[120px] items-center flex-col gap-5'>
           <div className='absolute top-6 w-[230px] h-[80px] rounded-lg flex justify-center items-center bg-[url("/Rooms/room-top.png")] bg-no-repeat bg-center bg-cover '>
             <span className='font-titan text-xl select-none'>Create Room</span>
           </div>
-          <div className='flex flex-col gap-4'>
+          <div className='flex flex-col '>
             <div className='w-[220px] h-[70px] relative'>
               <img className='w-full h-full' src='/Rooms/room-input.png' />
               <input
                 autoFocus
                 value={createRoomData.roomName}
-                onChange={(e) => handleChangeValue(e, "roomName")}
+                onChange={(e) => handleChangeValue(e.target.value, "roomName")}
                 className='absolute w-full h-full top-0 left-0 outline-none bg-[transparent] px-4 text-center'
                 placeholder='Room Name'
               />
             </div>
-            <div className='w-[220px] h-[70px] relative'>
+            <div
+              onClick={() => handleChangeValue(!createRoomData.isBetting, "isBetting")}
+              className='inline-flex cursor-pointer gap-2 ml-1 mt-2 items-center justify-center'
+            >
+              <div className='w-[30px] h-[30px] relative'>
+                <img className='w-[30px] h-[30px]' src='/Buttons/SmallButton-hover.png' />
+                {createRoomData.isBetting && (
+                  <img className='w-[20px] absolute top-[5px] left-[5px]' src='/Icons/ApproveIcon.png' />
+                )}
+              </div>
+              <span>Betting Room</span>
+            </div>
+            <div className={`w-[220px] h-[70px] relative mt-2 transition-all ${createRoomData.isBetting ? "" : "opacity-0"}`}>
               <img className='w-full h-full' src='/Rooms/room-input.png' />
               <input
                 value={createRoomData.roomBet}
-                onChange={(e) => handleChangeValue(e, "roomBet")}
+                onChange={(e) => handleChangeValue(e.target.value, "roomBet")}
                 className='absolute w-full h-full top-0 left-0 outline-none bg-[transparent] px-4 text-center'
                 placeholder='Room Bet'
               />

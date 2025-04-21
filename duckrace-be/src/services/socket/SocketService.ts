@@ -16,10 +16,6 @@ import { IRemoveDuckDTO } from "@/models/rooms/IRemoveDuckDTO";
 import { IStartGameSubmitDTO } from "@/models/rooms/IStartGameSubmitDTO";
 import { IUpdateListDuckDTO } from "@/models/rooms/IUpdateListDuckDTO";
 import { Server, Socket } from "socket.io";
-import GameService from "../game/GameService";
-import MezonClientService from "../mezon-client/MezonClientService";
-import RoomService from "../room/RoomService";
-import UserService from "../user/UserService";
 
 class SocketService implements ISocketService {
   private socketServer: Server;
@@ -27,12 +23,19 @@ class SocketService implements ISocketService {
   private _gameService: IGameService;
   private _roomService: IRoomService;
   private _mezonClientService: IMezonClientService;
-  constructor(Application: Application) {
+
+  constructor(
+    Application: Application,
+    UserService: IUserService,
+    RoomService: IRoomService,
+    GameService: IGameService,
+    MezonClientService: IMezonClientService
+  ) {
     this.socketServer = Application.socketServer;
-    this._userService = UserService.getInstance();
-    this._gameService = GameService.getInstance();
-    this._roomService = RoomService.getInstance();
-    this._mezonClientService = MezonClientService.getInstance();
+    this._gameService = GameService;
+    this._roomService = RoomService;
+    this._userService = UserService;
+    this._mezonClientService = MezonClientService;
     this.initGameService();
   }
 
@@ -80,9 +83,12 @@ class SocketService implements ISocketService {
     const socketUser: User = {
       id: mezonUser.id,
       socketId: socket.id,
+      mezonUserId: mezonUser.mezon_id,
       playerName: mezonUser.display_name,
       userName: mezonUser.username,
       wallet: walletBalance,
+      email: mezonUser.email,
+      avatar: mezonUser.avatar_url,
     };
     const addUserResponse = await this._userService.addUser(socketUser);
     if (addUserResponse.isSuccess) {
@@ -278,16 +284,16 @@ class SocketService implements ISocketService {
             const check = this._roomService.checkGameCompleted(data.roomId);
             if (check) {
               const endGameResponse = await this._gameService.endGame(data.gameId);
-              console.log("endGameResponse", endGameResponse);
               if (endGameResponse.isSuccess) {
                 const dataEmit = {
                   winners: endGameResponse.data.winners,
                   gameId: data.gameId,
                   totalBet: endGameResponse.data.totalBet,
-                  winBet:
+                  winBet: Math.floor(
                     endGameResponse.data.winners.length > 0
                       ? endGameResponse.data.totalBet / endGameResponse.data.winners.length
-                      : endGameResponse.data.totalBet / (endGameResponse.data.bettors.length || 1),
+                      : endGameResponse.data.totalBet / (endGameResponse.data.bettors.length || 1)
+                  ),
                   bettors: endGameResponse.data.bettors,
                 };
                 this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.END_GAME_SUCCESS, dataEmit);
@@ -330,17 +336,28 @@ class SocketService implements ISocketService {
       socket.emit(SocketEvents.EMIT.START_BET_FAILED, { errorMessage: "gameId is required" });
       return;
     }
+    const roomInfo = await this._roomService.getRoomById(data.roomId);
+    if (!roomInfo.isSuccess) {
+      console.log(`User ${socket.id} start bet failed: ${roomInfo.errorMessage}`);
+      socket.emit(SocketEvents.EMIT.START_BET_FAILED, roomInfo);
+      return;
+    }
+    const roomData = roomInfo.data as Room;
+    if (!roomData.roomInfo.isBetting) {
+      socket.emit(SocketEvents.EMIT.START_GAME_NOW, data);
+      return;
+    }
     const startBetResponse = await this._roomService.startBet(data.roomId);
-    if (startBetResponse.isSuccess) {
-      this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.START_BET_SUCCESS, startBetResponse);
-      setTimeout(() => {
-        this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.END_BET, data);
-        socket.emit(SocketEvents.EMIT.START_GAME_NOW, data);
-      }, 30000);
-    } else {
+    if (!startBetResponse.isSuccess) {
       console.log(`User ${socket.id} start bet failed: ${startBetResponse.errorMessage}`);
       socket.emit(SocketEvents.EMIT.START_BET_FAILED, startBetResponse);
+      return;
     }
+    this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.START_BET_SUCCESS, startBetResponse);
+    setTimeout(() => {
+      this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.END_BET, data);
+      socket.emit(SocketEvents.EMIT.START_GAME_NOW, data);
+    }, 30000);
   };
 
   onGetGameBettors = async (socket: Socket, gameId: string) => {
@@ -360,7 +377,16 @@ class SocketService implements ISocketService {
       console.log(`User ${socket.id} bet for duck`);
       const gameBettors = await this._gameService.getGameBettors(data.gameId);
       this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.GET_GAME_BETTORS_SUCCESS, gameBettors);
-      socket.emit(SocketEvents.EMIT.BET_FOR_DUCK_SUCCESS, betForDuckResponse);
+      socket.emit(SocketEvents.EMIT.BET_FOR_DUCK_SUCCESS, {
+        statusCode: 200,
+        isSuccess: true,
+        errorMessage: "Bet for duck successfully",
+        data: {
+          ducks: betForDuckResponse.data.ducks,
+          betAmount: data.betAmount * data.ducks.length,
+          gameId: data.gameId,
+        },
+      });
     } else {
       console.log(`User ${socket.id} bet for duck failed: ${betForDuckResponse.errorMessage}`);
       socket.emit(SocketEvents.EMIT.BET_FOR_DUCK_FAILED, betForDuckResponse);
@@ -368,9 +394,8 @@ class SocketService implements ISocketService {
   };
 
   onDisconnect = async (socket: Socket) => {
-    const userBySocketResponse = await this._userService.getUserBySocketId(socket.id);
-    const user = userBySocketResponse.data as User;
-    this.onLeaveRoom(socket, { userId: user?.id, roomId: "" });
+    const userId = socket.handshake.query.userId as string;
+    this.onLeaveRoom(socket, { userId, roomId: "" });
   };
 }
 export default SocketService;
