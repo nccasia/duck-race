@@ -32,6 +32,7 @@ const WithdrawToken = ({ openModalWithdraw, setOpenModalWithdraw }: WithdrawToke
       const response = await transactionService.withdrawToken({
         amount,
       });
+      console.log("response", response);
       if (response.isSuccess) {
         toast.success("Rút tiền thành công");
         setDepositAmount(0);

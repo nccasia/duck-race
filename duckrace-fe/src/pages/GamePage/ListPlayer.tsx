@@ -128,10 +128,14 @@ const ListPlayer = () => {
     const context = canvas?.getContext("2d");
     if (!context || !backgroundImageRef1.current || !canvas) return;
     const ratio = 1;
-    canvas.width = window.innerWidth * ratio;
-    canvas.height = window.innerHeight * ratio;
-    canvas.style.width = `${window.innerWidth}px`;
-    canvas.style.height = `${window.innerHeight}px`;
+    const resizeWindow = () => {
+      canvas.width = window.innerWidth * ratio;
+      canvas.height = window.innerHeight * ratio;
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+    };
+    resizeWindow(); // Gọi hàm resizeWindow khi component được mount
+    window.addEventListener("resize", resizeWindow); // Gọi hàm resizeWindow khi kích thước cửa sổ thay đổi
 
     if (context) {
       context.scale(ratio, ratio);
@@ -259,6 +263,7 @@ const ListPlayer = () => {
 
     return () => {
       cancelAnimationFrame(lastTime);
+      window.removeEventListener("resize", resizeWindow); // Hủy bỏ sự kiện khi component bị unmount
     };
   }, []);
 

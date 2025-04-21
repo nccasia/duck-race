@@ -13,7 +13,7 @@ const UserInformation = () => {
   return (
     <div className='w-[75px] h-[75px] bg-gray-300 rounded-md relative'>
       <div
-        className='w-full h-full flex justify-center items-center bg-[url(/avatar-default.jpg)] bg-center bg-cover bg-no-repeat rounded-md'
+        className='w-full h-full flex justify-center items-center bg-[url(/avatar-default.jpg)] bg-center bg-cover bg-no-repeat rounded-md border-2 border-[#23ae89d1]'
         style={{ backgroundImage: `url('${currentUser?.avatar ?? "/avatar-default.jpg"}')` }}
       ></div>
       <Popover>

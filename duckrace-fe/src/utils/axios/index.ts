@@ -26,7 +26,7 @@ axiosConfig.interceptors.request.use((config) => {
 
 axiosConfig.interceptors.response.use(
   (response: any) => {
-    return response.data;
+    return response;
   },
   async (error) => {
     if (error.response?.status === 401) {
