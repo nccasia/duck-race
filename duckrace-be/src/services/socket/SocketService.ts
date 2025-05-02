@@ -81,14 +81,14 @@ class SocketService implements ISocketService {
 
     const mezonUser = hashUserResponse?.data as MezonUser;
     const socketUser: User = {
-      id: mezonUser.id,
+      id: mezonUser?.id,
       socketId: socket.id,
-      mezonUserId: mezonUser.mezon_id,
-      playerName: mezonUser.display_name,
-      userName: mezonUser.username,
+      mezonUserId: mezonUser?.mezon_id,
+      playerName: mezonUser?.display_name,
+      userName: mezonUser?.username,
       wallet: walletBalance,
-      email: mezonUser.email,
-      avatar: mezonUser.avatar_url,
+      email: mezonUser?.email,
+      avatar: mezonUser?.avatar_url,
     };
     const addUserResponse = await this._userService.addUser(socketUser);
     if (addUserResponse.isSuccess) {

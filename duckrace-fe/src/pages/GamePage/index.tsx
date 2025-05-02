@@ -311,9 +311,9 @@ const GamePage = () => {
         role_id: user.role_id ?? [],
         userChannelId: user.userChannelId,
         user: {
-          display_name: user.user.display_name,
-          username: user.user.username,
-          avatar_url: user.user.avatar_url,
+          display_name: user.user?.display_name,
+          username: user.user?.username,
+          avatar_url: user.user?.avatar_url,
         },
         isSelected: false,
       }));

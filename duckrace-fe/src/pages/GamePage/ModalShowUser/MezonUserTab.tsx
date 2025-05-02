@@ -112,7 +112,7 @@ const MezonUserTab = ({ handleSaveListUser }: IMezonUserTabProps) => {
                     src={player.user.avatar_url ?? "https://mezon.ai/assets/images/mezon-logo-black.svg"}
                   />
                   <div className='ml-2 flex flex-col justify-center items-start flex-1 h-full w-full'>
-                    <span className=''>{player.user.display_name ?? player.user.username}</span>
+                    <span className=''>{player.user?.display_name ?? player.user?.username}</span>
                     <span className='text-[12px] font-light text-gray-500'>
                       {mezonClanRoles
                         .filter((role) => player.role_id.includes(role.id))

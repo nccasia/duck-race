@@ -34,7 +34,7 @@ const ModalUser = () => {
         newScore: 0,
         totalScore: 0,
       },
-      name: user.user.display_name ?? user.user.username,
+      name: user.user?.display_name ?? user.user?.username,
     }));
     socket.emit(SocketEvents.EMIT.UPDATE_LIST_DUCK_OF_ROOM, {
       roomId: currentRoom?.roomId,
