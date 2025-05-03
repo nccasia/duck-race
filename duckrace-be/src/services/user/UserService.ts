@@ -130,7 +130,8 @@ class UserService implements IUserService {
   public async addUser(user: User): Promise<ServiceResponse> {
     // Implementation here
     try {
-      if (!user.mezonUserId || !user.userName || !user.playerName || !user.email) {
+      console.log("add user information", user);
+      if (!user.mezonUserId || !user.userName) {
         return {
           statusCode: 400,
           isSuccess: false,

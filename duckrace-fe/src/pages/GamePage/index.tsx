@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Loading from "@/components/Loading";
 import UserInformation from "@/components/UserInformation";
 import { SocketEvents } from "@/constants/SocketEvents";
@@ -306,14 +307,14 @@ const GamePage = () => {
     window.Mezon.WebView?.postEvent("GET_CLAN_USERS" as MezonWebViewEvent, {}, () => {});
     window.Mezon.WebView?.onEvent("CLAN_USERS_RESPONSE" as MezonAppEvent, (_, data?: IMezonUser[]) => {
       if (!data) return;
-      const users: IMezonUser[] = data.map((user: IMezonUser) => ({
+      const users: IMezonUser[] = data.map((user: any) => ({
         id: user.id,
         role_id: user.role_id ?? [],
         userChannelId: user.userChannelId,
         user: {
-          display_name: user.user?.display_name,
-          username: user.user?.username,
-          avatar_url: user.user?.avatar_url,
+          display_name: user?.display_name,
+          username: user?.username,
+          avatar_url: user?.avatar_url,
         },
         isSelected: false,
       }));
