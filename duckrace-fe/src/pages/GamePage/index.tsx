@@ -3,7 +3,11 @@ import Loading from "@/components/Loading";
 import UserInformation from "@/components/UserInformation";
 import { SocketEvents } from "@/constants/SocketEvents";
 import { AppResponse } from "@/interface/app/AppResponse";
-import { BetForDuckResponse, BettorOfDucks, DuckPicked } from "@/interface/game/Game";
+import {
+  BetForDuckResponse,
+  BettorOfDucks,
+  DuckPicked,
+} from "@/interface/game/Game";
 import { IDuck, IMezonClan, IMezonUser, Room } from "@/interface/room/Room";
 import { User } from "@/interface/user/User";
 import { useSocket } from "@/providers/SocketProvider";
@@ -65,55 +69,74 @@ const GamePage = () => {
   } = useRoomStore();
   const [listDuckToShow, setListDuckToShow] = useState<IDuck[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isOpenPopoverConfirmBet, setIsOpenPopoverConfirmBet] = useState<boolean>(false);
+  const [isOpenPopoverConfirmBet, setIsOpenPopoverConfirmBet] =
+    useState<boolean>(false);
   useEffect(() => {
     if (!socket || !roomId) return;
     socket.emit(SocketEvents.EMIT.GET_ROOM_INFO, roomId);
-    socket.on(SocketEvents.ON.GET_ROOM_INFO_SUCCESS, (data: AppResponse<Room>) => {
-      setCurrentRoom(data.data as Room);
-      setListDucks(data.data?.ducks || []);
-      setTotalDucks(data.data?.totalDuck || 0);
+    socket.on(
+      SocketEvents.ON.GET_ROOM_INFO_SUCCESS,
+      (data: AppResponse<Room>) => {
+        setCurrentRoom(data.data as Room);
+        setListDucks(data.data?.ducks || []);
+        setTotalDucks(data.data?.totalDuck || 0);
 
-      setIsRacing(false);
-      setIsResetGame(true);
-      setGameStatus("waiting");
-      setIsCompletedAll(false);
-      setOpenModalShowRank(false);
-      setOpenModalShowResult(false);
-      setListDuckPicked([]);
-      setIsConfirmedBet(false);
+        setIsRacing(false);
+        setIsResetGame(true);
+        setGameStatus("waiting");
+        setIsCompletedAll(false);
+        setOpenModalShowRank(false);
+        setOpenModalShowResult(false);
+        setListDuckPicked([]);
+        setIsConfirmedBet(false);
 
-      navigate(
-        `${ROUTES.ROOM_DETAIL.replace(":roomId", (data.data as Room)?.roomId)}?gameId=${(data.data as Room)?.currentGame}`
-      );
-    });
+        navigate(
+          `${ROUTES.ROOM_DETAIL.replace(
+            ":roomId",
+            (data.data as Room)?.roomId
+          )}?gameId=${(data.data as Room)?.currentGame}`
+        );
+      }
+    );
     socket.on(SocketEvents.ON.GET_ROOM_INFO_FAILED, () => {});
-    socket.on(SocketEvents.ON.GET_MEMBER_OF_ROOM_SUCCESS, (data: AppResponse<User[]>) => {
-      setRoomMembers(data.data || []);
-    });
+    socket.on(
+      SocketEvents.ON.GET_MEMBER_OF_ROOM_SUCCESS,
+      (data: AppResponse<User[]>) => {
+        setRoomMembers(data.data || []);
+      }
+    );
     socket.on(SocketEvents.ON.GET_MEMBER_OF_ROOM_FAILED, () => {});
-    socket.on(SocketEvents.ON.GET_DUCKS_OF_ROOM_SUCCESS, (data: AppResponse<IDuck[]>) => {
-      setListDucks(data.data || []);
-      setTotalDucks(data.data?.length || 0);
-    });
+    socket.on(
+      SocketEvents.ON.GET_DUCKS_OF_ROOM_SUCCESS,
+      (data: AppResponse<IDuck[]>) => {
+        setListDucks(data.data || []);
+        setTotalDucks(data.data?.length || 0);
+      }
+    );
     socket.on(SocketEvents.ON.GET_DUCKS_OF_ROOM_FAILED, () => {});
-    socket.on(SocketEvents.ON.REMOVE_USER_FROM_GAME_SUCCESS, (data: AppResponse<Room>) => {
-      setCurrentRoom(data.data as Room);
-      setListDucks(data.data?.ducks || []);
-      setTotalDucks(data.data?.totalDuck || 0);
-    });
+    socket.on(
+      SocketEvents.ON.REMOVE_USER_FROM_GAME_SUCCESS,
+      (data: AppResponse<Room>) => {
+        setCurrentRoom(data.data as Room);
+        setListDucks(data.data?.ducks || []);
+        setTotalDucks(data.data?.totalDuck || 0);
+      }
+    );
     socket.on(SocketEvents.ON.REMOVE_USER_FROM_GAME_FAILED, () => {});
     socket.on(SocketEvents.ON.ADD_DUCK_TO_ROOM_FAILED, () => {});
     socket.on(SocketEvents.ON.ADD_DUCK_TO_ROOM_SUCCESS, () => {
       setAddDuckText("");
       setTabs("list-user");
     });
-    socket.on(SocketEvents.ON.UPDATE_LIST_DUCK_OF_ROOM_SUCCESS, (data: AppResponse<Room>) => {
-      setCurrentRoom(data.data as Room);
-      setListDucks(data.data?.ducks || []);
-      setTotalDucks(data.data?.totalDuck || 0);
-      setTabs("list-user");
-    });
+    socket.on(
+      SocketEvents.ON.UPDATE_LIST_DUCK_OF_ROOM_SUCCESS,
+      (data: AppResponse<Room>) => {
+        setCurrentRoom(data.data as Room);
+        setListDucks(data.data?.ducks || []);
+        setTotalDucks(data.data?.totalDuck || 0);
+        setTabs("list-user");
+      }
+    );
     socket.on(SocketEvents.ON.UPDATE_LIST_DUCK_OF_ROOM_FAILED, () => {});
     return () => {
       socket.off(SocketEvents.ON.GET_ROOM_INFO_SUCCESS);
@@ -157,7 +180,9 @@ const GamePage = () => {
     if (listDucks.length === 0) {
       return;
     }
-    const newList = listDucks.sort((a, b) => b.score.totalScore - a.score.totalScore);
+    const newList = listDucks.sort(
+      (a, b) => b.score.totalScore - a.score.totalScore
+    );
     setListDuckToShow(newList.slice(0, 3));
   }, [listDucks]);
 
@@ -210,27 +235,38 @@ const GamePage = () => {
       setListDucks(data.data?.ducks || []);
     });
     socket.on(SocketEvents.ON.START_TURN_FAILED, () => {});
-    socket.on(SocketEvents.ON.CREATE_NEW_GAME_SUCCESS, (data: AppResponse<Room>) => {
-      setCurrentRoom(data.data as Room);
-      setListDucks(data.data?.ducks || []);
-      setTotalDucks(data.data?.totalDuck || 0);
-      setIsRacing(false);
-      setIsResetGame(true);
-      setGameStatus("waiting");
-      setIsCompletedAll(false);
-      setOpenModalShowRank(false);
-      setOpenModalShowResult(false);
-      setListDuckPicked([]);
-      setIsConfirmedBet(false);
-      navigate(`${ROUTES.ROOM_DETAIL.replace(":roomId", (data.data as Room).roomId)}?gameId=${(data.data as Room).currentGame}`);
-      if (countdownRef.current) {
-        countdownRef.current.resetCountdown();
+    socket.on(
+      SocketEvents.ON.CREATE_NEW_GAME_SUCCESS,
+      (data: AppResponse<Room>) => {
+        setCurrentRoom(data.data as Room);
+        setListDucks(data.data?.ducks || []);
+        setTotalDucks(data.data?.totalDuck || 0);
+        setIsRacing(false);
+        setIsResetGame(true);
+        setGameStatus("waiting");
+        setIsCompletedAll(false);
+        setOpenModalShowRank(false);
+        setOpenModalShowResult(false);
+        setListDuckPicked([]);
+        setIsConfirmedBet(false);
+        navigate(
+          `${ROUTES.ROOM_DETAIL.replace(
+            ":roomId",
+            (data.data as Room).roomId
+          )}?gameId=${(data.data as Room).currentGame}`
+        );
+        if (countdownRef.current) {
+          countdownRef.current.resetCountdown();
+        }
       }
-    });
+    );
     socket.on(SocketEvents.ON.CREATE_NEW_GAME_FAILED, () => {});
-    socket.on(SocketEvents.ON.CHANGE_TIME_SUCCESS, (data: AppResponse<Room>) => {
-      setCurrentRoom(data.data as Room);
-    });
+    socket.on(
+      SocketEvents.ON.CHANGE_TIME_SUCCESS,
+      (data: AppResponse<Room>) => {
+        setCurrentRoom(data.data as Room);
+      }
+    );
     socket.on(SocketEvents.ON.CHANGE_TIME_FAILED, () => {});
     socket.on(SocketEvents.ON.START_BET_SUCCESS, () => {
       setGameStatus("betting");
@@ -248,17 +284,23 @@ const GamePage = () => {
       });
       setGameStatus("racing");
     });
-    socket.on(SocketEvents.ON.GET_GAME_BETTORS_SUCCESS, (data: AppResponse<BettorOfDucks[]>) => {
-      setListBettorOfDucks(data.data || []);
-    });
-    socket.on(SocketEvents.ON.BET_FOR_DUCK_SUCCESS, (data: AppResponse<BetForDuckResponse>) => {
-      setIsOpenPopoverConfirmBet(false);
-      toast.success("You have bet for duck successfully");
-      if (currentUser.wallet && data.data?.betAmount) {
-        changeWallet(currentUser.wallet - data.data?.betAmount);
+    socket.on(
+      SocketEvents.ON.GET_GAME_BETTORS_SUCCESS,
+      (data: AppResponse<BettorOfDucks[]>) => {
+        setListBettorOfDucks(data.data || []);
       }
-      setIsConfirmedBet(true);
-    });
+    );
+    socket.on(
+      SocketEvents.ON.BET_FOR_DUCK_SUCCESS,
+      (data: AppResponse<BetForDuckResponse>) => {
+        setIsOpenPopoverConfirmBet(false);
+        toast.success("You have bet for duck successfully");
+        if (currentUser.wallet && data.data?.betAmount) {
+          changeWallet(currentUser.wallet - data.data?.betAmount);
+        }
+        setIsConfirmedBet(true);
+      }
+    );
     return () => {
       socket.off(SocketEvents.ON.START_GAME_SUCCESS);
       socket.off(SocketEvents.ON.START_TURN_FAILED);
@@ -304,29 +346,43 @@ const GamePage = () => {
   ]);
 
   useEffect(() => {
-    window.Mezon.WebView?.postEvent("GET_CLAN_USERS" as MezonWebViewEvent, {}, () => {});
-    window.Mezon.WebView?.onEvent("CLAN_USERS_RESPONSE" as MezonAppEvent, (_, data?: IMezonUser[]) => {
-      if (!data) return;
-      const users: IMezonUser[] = data.map((user: any) => ({
-        id: user.id,
-        role_id: user.role_id ?? [],
-        userChannelId: user.userChannelId,
-        user: {
-          display_name: user?.display_name,
-          username: user?.username,
-          avatar_url: user?.avatar_url,
-        },
-        isSelected: false,
-      }));
-      setMezonClanUsers(users);
-    });
-    window.Mezon.WebView?.postEvent("GET_CLAN_ROLES" as MezonWebViewEvent, {}, () => {});
-    window.Mezon.WebView?.onEvent("CLAN_ROLES_RESPONSE" as MezonAppEvent, (_, data) => {
-      setMezonClanRoles(data as IMezonClan[]);
-      if ((data as IMezonClan[]).length > 0) {
-        setSelectedClanRole((data as IMezonClan[])[0].id);
+    window.Mezon.WebView?.postEvent(
+      "GET_CLAN_USERS" as MezonWebViewEvent,
+      {},
+      () => {}
+    );
+    window.Mezon.WebView?.onEvent(
+      "CLAN_USERS_RESPONSE" as MezonAppEvent,
+      (_, data?: IMezonUser[]) => {
+        if (!data) return;
+        const users: IMezonUser[] = data.map((user: any) => ({
+          id: user.id,
+          role_id: user.role_id ?? [],
+          userChannelId: user.userChannelId,
+          user: {
+            display_name: user?.display_name,
+            username: user?.username,
+            avatar_url: user?.avatar_url,
+          },
+          isSelected: false,
+        }));
+        setMezonClanUsers(users);
       }
-    });
+    );
+    window.Mezon.WebView?.postEvent(
+      "GET_CLAN_ROLES" as MezonWebViewEvent,
+      {},
+      () => {}
+    );
+    window.Mezon.WebView?.onEvent(
+      "CLAN_ROLES_RESPONSE" as MezonAppEvent,
+      (_, data) => {
+        setMezonClanRoles(data as IMezonClan[]);
+        if ((data as IMezonClan[]).length > 0) {
+          setSelectedClanRole((data as IMezonClan[])[0].id);
+        }
+      }
+    );
   }, [setMezonClanRoles, setMezonClanUsers, setSelectedClanRole]);
 
   useEffect(() => {
@@ -334,24 +390,43 @@ const GamePage = () => {
   }, [listDuckPicked]);
   useEffect(() => {
     if (!socket) return;
-    window.Mezon.WebView?.onEvent("SEND_TOKEN_RESPONSE_SUCCESS" as MezonAppEvent, () => {
-      socket.emit(SocketEvents.EMIT.BET_FOR_DUCK, {
-        ducks: listDuckPickedRef.current?.map((duck) => duck.duckId),
-        gameId: currentRoom?.currentGame,
-        userId: currentUser.id,
-        betAmount: currentRoom?.roomInfo.roomBet ?? 1,
-        roomId: currentRoom?.roomId,
-      });
-      setIsConfirmedBet(true);
-    });
-    window.Mezon.WebView?.onEvent("SEND_TOKEN_RESPONSE_FAILED" as MezonAppEvent, (_, response) => {
-      console.log("send token failed", response);
-    });
+    window.Mezon.WebView?.onEvent(
+      "SEND_TOKEN_RESPONSE_SUCCESS" as MezonAppEvent,
+      () => {
+        socket.emit(SocketEvents.EMIT.BET_FOR_DUCK, {
+          ducks: listDuckPickedRef.current?.map((duck) => duck.duckId),
+          gameId: currentRoom?.currentGame,
+          userId: currentUser.id,
+          betAmount: currentRoom?.roomInfo.roomBet ?? 1,
+          roomId: currentRoom?.roomId,
+        });
+        setIsConfirmedBet(true);
+      }
+    );
+    window.Mezon.WebView?.onEvent(
+      "SEND_TOKEN_RESPONSE_FAILED" as MezonAppEvent,
+      (_, response) => {
+        console.log("send token failed", response);
+      }
+    );
     return () => {
-      window.Mezon.WebView?.offEvent("SEND_TOKEN_RESPONSE_SUCCESS" as MezonAppEvent, () => {});
-      window.Mezon.WebView?.offEvent("SEND_TOKEN_RESPONSE_FAILED" as MezonAppEvent, () => {});
+      window.Mezon.WebView?.offEvent(
+        "SEND_TOKEN_RESPONSE_SUCCESS" as MezonAppEvent,
+        () => {}
+      );
+      window.Mezon.WebView?.offEvent(
+        "SEND_TOKEN_RESPONSE_FAILED" as MezonAppEvent,
+        () => {}
+      );
     };
-  }, [currentRoom?.currentGame, currentRoom?.roomId, currentRoom?.roomInfo.roomBet, currentUser.id, setIsConfirmedBet, socket]);
+  }, [
+    currentRoom?.currentGame,
+    currentRoom?.roomId,
+    currentRoom?.roomInfo.roomBet,
+    currentUser.id,
+    setIsConfirmedBet,
+    socket,
+  ]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -362,7 +437,10 @@ const GamePage = () => {
       clearTimeout(timeOut);
     };
   }, []);
-  const countdownRef = useRef<{ startCountdown: () => void; resetCountdown: () => void }>(null);
+  const countdownRef = useRef<{
+    startCountdown: () => void;
+    resetCountdown: () => void;
+  }>(null);
 
   const handleStartGame = () => {
     if (!socket) return;
@@ -409,43 +487,50 @@ const GamePage = () => {
     });
   };
   return (
-    <div className='h-full w-full bg-[#21107266] rounded-lg relative'>
+    <div className="h-full w-full bg-[#21107266] rounded-lg relative">
       <ListPlayer />
       {isLoading && <Loading />}
-      <div className='absolute top-2 left-0 w-full flex justify-center items-center'>
+      <div className="absolute top-2 left-0 w-full flex justify-center items-center">
         <div
           onClick={handleOutGame}
-          className='w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-0 left-2 hover:scale-[0.98] transition-all active:scale-[1.0]'
+          className="w-[60px] h-[60px] flex justify-center items-center cursor-pointer absolute top-0 left-2 hover:scale-[0.98] transition-all active:scale-[1.0]"
         >
-          <img src='/Buttons/SmallButton-pressed.png' />
-          <img className='w-[30px] absolute top-[12px] left-[12px]' src='/Icons/ExitIcon.png' />
+          <img src="/Buttons/SmallButton-pressed.png" />
+          <img
+            className="w-[30px] absolute top-[12px] left-[12px]"
+            src="/Icons/ExitIcon.png"
+          />
         </div>
         <ModalRoomInfomation />
         <div
-          className='w-[500px] h-[150px] flex justify-center items-center absolute top-0 left-[50%] translate-x-[-50%]'
+          className="w-[500px] h-[150px] flex justify-center items-center absolute top-0 left-[50%] translate-x-[-50%]"
           style={{ filter: "drop-shadow(0 0 .3rem rgba(124, 6, 226, .874))" }}
         >
-          <img className='w-full h-full' src='/Window/SmallSubstrate.png' />
-          <div className='w-[150px] h-[55px] justify-center items-center left-[10px] absolute top-[20px] '>
-            <img className='w-full h-full' src='/Buttons/Button-hover.png' />
-            <CountdownTime ref={countdownRef} initTime={currentRoom?.expiredTime} />
+          <img className="w-full h-full" src="/Window/SmallSubstrate.png" />
+          <div className="w-[150px] h-[55px] justify-center items-center left-[10px] absolute top-[20px] ">
+            <img className="w-full h-full" src="/Buttons/Button-hover.png" />
+            <CountdownTime
+              ref={countdownRef}
+              initTime={currentRoom?.expiredTime}
+            />
           </div>
           {isRacing ? (
             <button
               onClick={handleResetGame}
               disabled={gameStatus === "racing"}
-              className='w-[150px] h-[55px] cursor-pointer justify-center items-center left-[10px] absolute bottom-[10px] filter hover:drop-shadow-[0_0_0.1rem_rgba(124,6,226,0.874)] transition-all active:drop-shadow-[0_0_0.2rem_rgba(124,6,226,0.874)]'
+              className="w-[150px] h-[55px] cursor-pointer justify-center items-center left-[10px] absolute bottom-[10px] filter hover:drop-shadow-[0_0_0.1rem_rgba(124,6,226,0.874)] transition-all active:drop-shadow-[0_0_0.2rem_rgba(124,6,226,0.874)]"
             >
               <img
-                className='w-full h-full'
+                className="w-full h-full"
                 src={
-                  gameStatus !== "waiting" || currentRoom?.ownerId !== currentUser.id
+                  gameStatus !== "waiting" ||
+                  currentRoom?.ownerId !== currentUser.id
                     ? "/Buttons/Button-disabled.png"
                     : "/Buttons/Button.png"
                 }
               />
-              <div className='flex  justify-center items-center gap-2 text-[30px] font-titan text-white absolute top-1 left-1/2 transform -translate-x-1/2 '>
-                <img className='w-[20px] ' src='/Icons/RefreshIcon.png' />
+              <div className="flex  justify-center items-center gap-2 text-[30px] font-titan text-white absolute top-1 left-1/2 transform -translate-x-1/2 ">
+                <img className="w-[20px] " src="/Icons/RefreshIcon.png" />
                 <span>Reset</span>
               </div>
             </button>
@@ -453,31 +538,35 @@ const GamePage = () => {
             <button
               onClick={handleStartGame}
               disabled={gameStatus !== "waiting"}
-              className='w-[150px] h-[55px] cursor-pointer justify-center items-center left-[10px] absolute bottom-[10px] filter hover:drop-shadow-[0_0_0.1rem_rgba(124,6,226,0.874)] transition-all active:drop-shadow-[0_0_0.2rem_rgba(124,6,226,0.874)]'
+              className="w-[150px] h-[55px] cursor-pointer justify-center items-center left-[10px] absolute bottom-[10px] filter hover:drop-shadow-[0_0_0.1rem_rgba(124,6,226,0.874)] transition-all active:drop-shadow-[0_0_0.2rem_rgba(124,6,226,0.874)]"
             >
               <img
-                className='w-full h-full'
+                className="w-full h-full"
                 src={
-                  gameStatus !== "waiting" || currentRoom?.ownerId !== currentUser.id
+                  gameStatus !== "waiting" ||
+                  currentRoom?.ownerId !== currentUser.id
                     ? "/Buttons/Button-disabled.png"
                     : "/Buttons/Button.png"
                 }
               />
-              <div className='flex  justify-center items-center gap-2 text-[30px] font-titan text-white absolute top-1 left-1/2 transform -translate-x-1/2 '>
-                <img className='w-[20px] ' src='/Icons/PlayIcon.png' />
+              <div className="flex  justify-center items-center gap-2 text-[30px] font-titan text-white absolute top-1 left-1/2 transform -translate-x-1/2 ">
+                <img className="w-[20px] " src="/Icons/PlayIcon.png" />
                 <span>Start</span>
               </div>
             </button>
           )}
           <div
             style={{ filter: "drop-shadow(0 0 .3rem rgba(124, 6, 226, .874))" }}
-            className='w-[300px] h-[130px] justify-center items-center right-[10px] absolute top-[50%] translate-y-[-50%] '
+            className="w-[300px] h-[130px] justify-center items-center right-[10px] absolute top-[50%] translate-y-[-50%] "
           >
-            <img className='w-full h-full' src='/Window/SmallSubstrate.png' />
-            <div className=' items-center w-full py-1 px-3 text-[20px] font-titan text-white absolute top-2 left-1/2 transform -translate-x-1/2 '>
+            <img className="w-full h-full" src="/Window/SmallSubstrate.png" />
+            <div className=" items-center w-full py-1 px-3 text-[20px] font-titan text-white absolute top-2 left-1/2 transform -translate-x-1/2 ">
               {gameStatus !== "waiting" &&
                 listDuckToShow?.map((player, index) => (
-                  <div key={index} className='flex items-center gap-2'>
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 text-gray-500"
+                  >
                     <div className="bg-[url('/Icons/StarIcon.png')] flex items-center justify-center bg-center bg-no-repeat bg-cover w-[35px] h-[35px]">
                       {index + 1}
                     </div>
@@ -491,7 +580,10 @@ const GamePage = () => {
         {currentRoom?.ownerId === currentUser.id ? (
           <>
             <ModalShowResult onResetGame={handleResetGame} />
-            <ModalBet isPopoverOpen={isOpenPopoverConfirmBet} setIsPopoverOpen={setIsOpenPopoverConfirmBet} />
+            <ModalBet
+              isPopoverOpen={isOpenPopoverConfirmBet}
+              setIsPopoverOpen={setIsOpenPopoverConfirmBet}
+            />
             <ModalUser />
             <ModalSetup />
             <ModalShowRank />
@@ -500,10 +592,13 @@ const GamePage = () => {
           <>
             <ModalShowResult onResetGame={handleResetGame} />
             <ModalShowRank />
-            <ModalBet isPopoverOpen={isOpenPopoverConfirmBet} setIsPopoverOpen={setIsOpenPopoverConfirmBet} />
+            <ModalBet
+              isPopoverOpen={isOpenPopoverConfirmBet}
+              setIsPopoverOpen={setIsOpenPopoverConfirmBet}
+            />
           </>
         )}
-        <div className='fixed top-3 right-3'>
+        <div className="fixed top-3 right-3">
           <UserInformation />
         </div>
       </div>

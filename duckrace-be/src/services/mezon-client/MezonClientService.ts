@@ -8,14 +8,17 @@ class MezonClientService implements IMezonClientService {
   public async authenticate(): Promise<any> {
     console.log("MezonClientService authenticate");
     this.client = new MezonClient(process.env.MEZON_APP_TOKEN);
-    await this.client.authenticate();
+    await this.client.login();
   }
 
   public getClient(): MezonClient {
     return this.client;
   }
 
-  public async rewardTokenForUser(winners: string[], winBet: number): Promise<ServiceResponse> {
+  public async rewardTokenForUser(
+    winners: string[],
+    winBet: number
+  ): Promise<ServiceResponse> {
     try {
       for (let i = 0; i < winners.length; i++) {
         const sendTokenData: TokenSentEvent = {
