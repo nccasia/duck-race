@@ -6,7 +6,9 @@ import { Hasher } from "@/utils/hash";
 import { StatusCodes } from "http-status-codes";
 import { Base64 } from "js-base64";
 import * as queryString from "query-string";
+import md5 from "md5";
 import PrismaService from "../database/PrismaService";
+
 class UserService implements IUserService {
   private prismaService: PrismaService;
   private jwtService: IJWTService;
@@ -102,7 +104,9 @@ class UserService implements IUserService {
       const mezonUser = JSON.parse(hashParams?.user) as MezonUser;
       const hashParamsString = rawHashData.split("&hash=")[0];
       const botToken = process.env.MEZON_APP_TOKEN || "";
-      const secretKey = Hasher.HMAC_SHA256(botToken, "WebAppData");
+
+      const hashedBotToken = md5(botToken);
+      const secretKey = Hasher.HMAC_SHA256(hashedBotToken, "WebAppData");
       const hashedData = Hasher.HEX(Hasher.HMAC_SHA256(secretKey, hashParamsString));
 
       if (hashedData !== hash) {

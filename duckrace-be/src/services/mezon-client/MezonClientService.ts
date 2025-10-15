@@ -5,10 +5,23 @@ class MezonClientService implements IMezonClientService {
   private client: MezonClient;
   constructor() {}
 
-  public async authenticate(): Promise<any> {
-    console.log("MezonClientService authenticate");
-    this.client = new MezonClient(process.env.MEZON_APP_TOKEN);
-    await this.client.login();
+  public async authenticate(): Promise<void> {
+    const clientId = process.env.MEZON_APP_ID;
+    const token = process.env.MEZON_APP_TOKEN;
+    if (!clientId || !token) {
+      throw new Error("Mezon APP ID or TOKEN is not defined");
+    }
+
+    this.client = new MezonClient({
+      botId: clientId,
+      token: token,
+    });
+    await this.client.login().then((res) => {
+      console.log("MezonClientService login success: ", res);
+    }).catch((err) => {
+      console.error("MezonClientService login error", err);
+      throw err;
+    });
   }
 
   public getClient(): MezonClient {
