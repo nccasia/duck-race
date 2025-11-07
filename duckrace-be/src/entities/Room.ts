@@ -8,16 +8,11 @@ class RoomInfo {
   public roomUsePassword: boolean;
   public isBetting: boolean;
 }
-class Score {
-  public oldScore: number;
-  public newScore: number;
-  public totalScore: number;
-}
 
 class Duck {
   public id: string;
   public name: string;
-  public score: Score;
+  public score: number[];
   public order: number;
   public colorNumber: number;
   public role_id?: string[];
@@ -46,4 +41,4 @@ class Room {
   public isPlaying = false;
 }
 
-export { Duck, Room, RoomInfo, Score };
+export { Duck, Room, RoomInfo };
