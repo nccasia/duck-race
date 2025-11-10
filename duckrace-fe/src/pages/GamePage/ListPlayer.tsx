@@ -42,12 +42,14 @@ const ListPlayer = () => {
   const duckImagesRef = useRef<HTMLImageElement[]>([]);
   const backgroundImageRef1 = useRef<HTMLImageElement | null>(null); // Lưu hình ảnh nền
   const backgroundImageRef2 = useRef<HTMLImageElement | null>(null); // Lưu hình ảnh nền
+  const backgroundImageRef3 = useRef<HTMLImageElement | null>(null); // Lưu hình ảnh nền
   const endGameLineRef = useRef<HTMLImageElement | null>(null); // Lưu hình ảnh nền
   const startGameLineRef = useRef<HTMLImageElement | null>(null); // Lưu hình ảnh nền
   const background1Position = useRef<number>(0); // Lưu vị trí của background 1
   const background2Position = useRef<number>(0); // Lưu vị trí của background 2
   const endGameLinePosition = useRef<number | null>(null); // Lưu vị trí của background 2
   const startGameLinePosition = useRef<number | null>(null); // Lưu vị trí của background 2
+  const lastFrameTimeRef = useRef<number>(0);
   const players = useRoomStore((state) => state.listDucks); // Lấy danh sách player từ store
   const isResetGame = useGameStore((state) => state.isResetGame); // Lấy trạng thái reset vị trí từ store
   const setIsCompletedAll = useGameStore((state) => state.setIsCompletedAll); // Lấy danh sách player từ storeuseGameStore((state) => state.setGameStatus);useRef<boolean>(false);
@@ -60,6 +62,16 @@ const ListPlayer = () => {
     const totalPlayerRef = useRef<number>(0);
 
   const { isRacing, setGameResult, gameResult, maxScore, raceProgress } = useGameStore(); // Lấy trạng thái đua của game từ store
+
+  const playersRef = useRef(players);
+  useEffect(() => {
+    playersRef.current = players;
+  }, [players]);
+
+  const raceProgressRef = useRef(raceProgress);
+  useEffect(() => {
+    raceProgressRef.current = raceProgress;
+  }, [raceProgress]);
 
   useEffect(() => {
     if (!socket) return;
@@ -101,12 +113,16 @@ const ListPlayer = () => {
     duckImagesRef.current = duckImages;
 
     const backgroundImage1 = new Image();
-    backgroundImage1.src = "/bg-4.png"; // Đường dẫn tới hình ảnh nền
+    backgroundImage1.src = "/bg-4.1.PNG"; // Đường dẫn tới hình ảnh nền
     backgroundImageRef1.current = backgroundImage1;
 
     const backgroundImage2 = new Image();
-    backgroundImage2.src = "/bg-5.png"; // Đường dẫn tới hình ảnh nền
+    backgroundImage2.src = "/bg-5.1.PNG"; // Đường dẫn tới hình ảnh nền
     backgroundImageRef2.current = backgroundImage2;
+
+    const backgroundImage3 = new Image();
+    backgroundImage3.src = "/bg-5.2.PNG"; // Đường dẫn tới hình ảnh nền
+    backgroundImageRef3.current = backgroundImage3;
 
     const endGameLineImage = new Image();
     endGameLineImage.src = "/vach-dich.jpg"; // Đường dẫn tới hình ảnh nền
@@ -122,7 +138,7 @@ const ListPlayer = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const startX = 5;
+    const startX = 30;
     const endX = canvas.width - 100;
     const raceDistance = endX - startX;
 
@@ -134,10 +150,10 @@ const ListPlayer = () => {
       currentPlayerIds.add(playerId);
 
       const duckPosition = duckPositionsRef.current.get(playerId) || {
-        x: 5,
+        x: 30,
         y: 0, // Y position is determined by index in the render loop
-        posStart: 5,
-        posEnd: 5,
+        posStart: 30,
+        posEnd: 30,
         duckIcon: player.colorNumber,
       };
 
@@ -187,43 +203,68 @@ const ListPlayer = () => {
     const context = canvas?.getContext("2d");
     if (!context || !backgroundImageRef1.current || !canvas) return;
     const ratio = 1;
-    const resizeWindow = () => {
-      canvas.width = window.innerWidth * ratio;
-      canvas.height = window.innerHeight * ratio;
-      canvas.style.width = `${window.innerWidth}px`;
-      canvas.style.height = `${window.innerHeight}px`;
-    };
+          const resizeWindow = () => {
+            canvas.width = window.innerWidth * ratio;
+            canvas.height = window.innerHeight * ratio;
+            canvas.style.width = `${window.innerWidth}px`;
+            canvas.style.height = `${window.innerHeight}px`;
+            background1Position.current = 0;
+            background2Position.current = canvas.width;
+          };
     resizeWindow(); // Gọi hàm resizeWindow khi component được mount
     window.addEventListener("resize", resizeWindow); // Gọi hàm resizeWindow khi kích thước cửa sổ thay đổi
 
     let animationFrameId: number;
 
-    const animateDucks = () => {
+    const animateDucks = (currentTime: number) => {
+        if (lastFrameTimeRef.current === 0) {
+            lastFrameTimeRef.current = currentTime;
+            animationFrameId = requestAnimationFrame(animateDucks);
+            return;
+        }
+        const deltaTime = currentTime - lastFrameTimeRef.current;
+        lastFrameTimeRef.current = currentTime;
+
         context.clearRect(0, 0, canvas.width, canvas.height);
 
-        const backgroundSpeed = 0.5;
-        let background1X = background1Position.current - backgroundSpeed;
-        let background2X = background2Position.current - backgroundSpeed;
-        if (backgroundImageRef1.current && backgroundImageRef2.current) {
-            context.drawImage(backgroundImageRef1.current, background1X, 0, canvas.width + 10, canvas.height);
-            context.drawImage(backgroundImageRef2.current, background2X + canvas.width, 0, canvas.width + 10, canvas.height);
+        // Draw static background
+        if (backgroundImageRef1.current) {
+            context.drawImage(backgroundImageRef1.current, 0, 0, canvas.width, canvas.height);
         }
-        if (background1X <= -canvas.width) background1X = canvas.width;
-        if (background2X <= -2 * canvas.width) background2X = 0;
-        background1Position.current = background1X;
-        background2Position.current = background2X;
+
+        // Animate and draw scrolling water
+        const backgroundSpeed = 50; // Pixels per second
+        const distanceMoved = (backgroundSpeed * deltaTime) / 1000;
+        let waterX1 = background1Position.current - distanceMoved;
+        let waterX2 = background2Position.current - distanceMoved;
+
+        // When an image moves off-screen to the left, reset its position to the far right
+        if (waterX1 < -canvas.width) {
+            waterX1 += canvas.width * 2;
+        }
+        if (waterX2 < -canvas.width) {
+            waterX2 += canvas.width * 2;
+        }
+
+        if (backgroundImageRef2.current && backgroundImageRef3.current) {
+            context.drawImage(backgroundImageRef2.current, waterX1, 0, canvas.width, canvas.height);
+            context.drawImage(backgroundImageRef3.current, waterX2, 0, canvas.width, canvas.height);
+        }
+
+        background1Position.current = waterX1;
+        background2Position.current = waterX2;
 
         const topOffset = canvas.height / 3.5; // Relative top offset to avoid modals
         const bottomOffset = canvas.height / 10; // Relative space at the bottom
         const availableHeight = canvas.height - topOffset - bottomOffset;
-
-        if (raceProgress.maxTurns > 0 && raceProgress.turn >= raceProgress.maxTurns - 3) {
+        const waterHeight = canvas.height - topOffset;
+        if (raceProgressRef.current.maxTurns > 0 && raceProgressRef.current.turn >= raceProgressRef.current.maxTurns - 3) {
             isEndGameRef.current = true;
         }
 
         if (endGameLineRef.current && isEndGameRef.current) {
             let endGameLineX = (endGameLinePosition.current ?? canvas.width) - 0.5;
-            context.drawImage(endGameLineRef.current, endGameLineX, canvas.height / 5, 30, canvas.height);
+            context.drawImage(endGameLineRef.current, endGameLineX, topOffset, 30, waterHeight);
             if (endGameLineX <= canvas.width - canvas.height / 5) {
                 endGameLineX = canvas.width - canvas.height / 5;
             }
@@ -231,7 +272,7 @@ const ListPlayer = () => {
         }
         if (startGameLineRef.current) {
             let startGameLineX = (startGameLinePosition.current ?? 60) - 0.5;
-            context.drawImage(startGameLineRef.current, startGameLineX, canvas.height / 5, 30, canvas.height);
+            context.drawImage(startGameLineRef.current, startGameLineX, topOffset, 30, waterHeight);
             if (startGameLineX <= 60 && !isRacingRef.current) startGameLineX = 60;
             startGameLinePosition.current = startGameLineX;
         }
@@ -242,7 +283,7 @@ const ListPlayer = () => {
         let completedGameCount = 0;
         const spacing = totalPlayerRef.current > 1 ? availableHeight / (totalPlayerRef.current - 1) : 0;
 
-        const stablePlayers = [...players].sort((a, b) => b.order - a.order);
+        const stablePlayers = [...playersRef.current].sort((a, b) => b.order - a.order);
 
         stablePlayers.forEach((player, index) => {
             if (!player.id) return;
@@ -253,7 +294,7 @@ const ListPlayer = () => {
                 // Nội suy vị trí X
                 duckPosition.x = duckPosition.posStart + (duckPosition.posEnd - duckPosition.posStart) * interpolationFactor;
             }
-            
+
             // New Y position calculation based on the current array index
             duckPosition.y = topOffset + index * spacing;
 
@@ -269,7 +310,7 @@ const ListPlayer = () => {
             if (duckImage) {
                 context.drawImage(duckImage, duckPosition.x, duckPosition.y, 60, 60);
             }
-            
+
             // Draw player name in a bubble
             if (player.name == player.user?.display_name ? player.user?.display_name : (player && player.name)) {
                 context.font = "bold 12px 'DVN-TitanOne', sans-serif";
@@ -306,15 +347,15 @@ const ListPlayer = () => {
         }
 
         animationFrameId = requestAnimationFrame(animateDucks);
-        };
+    };
 
-    animateDucks();
+    animationFrameId = requestAnimationFrame(animateDucks);
 
     return () => {
           cancelAnimationFrame(animationFrameId);
           window.removeEventListener("resize", resizeWindow);
         };
-  }, [setIsCompletedAll, raceProgress, players]);
+  }, [setIsCompletedAll]);
 
   return (
     <div className='relative bg-[#21107266] rounded-lg '>
