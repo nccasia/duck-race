@@ -271,7 +271,7 @@ const ListPlayer = () => {
             }
             
             // Draw player name in a bubble
-            if (player && player.name) {
+            if (player.name == player.user?.display_name ? player.user?.display_name : (player && player.name)) {
                 context.font = "bold 12px 'DVN-TitanOne', sans-serif";
                 const playerName = player.name;
                 const textMetrics = context.measureText(playerName);
