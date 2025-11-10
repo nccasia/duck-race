@@ -303,7 +303,7 @@ class GameService implements IGameService {
             game.gameStatus = "completed";
             const listDucksResponse = await this._roomService.getDucksOfRoom(game.roomId);
             const listDucks = listDucksResponse.data;
-            const ducksWithTotalScore = listDucks.map((duck) => {
+            const ducksWithTotalScore = listDucks.map((duck: { score: any[]; }) => {
                 return {
                     ...duck,
                     totalScore: Array.isArray(duck.score) ? duck.score.reduce((acc: any, score: any) => acc + score, 0) : 0,

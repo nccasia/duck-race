@@ -306,7 +306,7 @@ class RoomService implements IRoomService {
             newRoom.members = [];
             newRoom.isPlaying = false;
             newRoom.currentTime = 0;
-            newRoom.expiredTime = 60;
+            newRoom.expiredTime = 30;
             newRoom.ducks = [];
             newRoom.totalDuck = 0;
             newRoom.status = "waiting";
@@ -558,51 +558,6 @@ class RoomService implements IRoomService {
         }
     }
 
-    // public async startTurn(roomId: string): Promise<ServiceResponse> {
-    //     try {
-    //         const currentRoom = this.listRooms.find((room) => room.roomId === roomId);
-    //         if (!currentRoom) {
-    //             return {
-    //                 statusCode: 404,
-    //                 isSuccess: false,
-    //                 errorMessage: "Room is not found",
-    //             };
-    //         }
-    //
-    //
-    //         const ducks = currentRoom.ducks;
-    //         const expiredTime = currentRoom.expiredTime;
-    //
-    //         const randomListDuck = this.randomDuckArray(ducks);
-    //         const startScore = 1;
-    //         const endScore = 6;
-    //         let score = startScore;
-    //         randomListDuck?.forEach((duck, index) => {
-    //             let turnScore = score + (index % 6);
-    //             if (turnScore > endScore) {
-    //                 turnScore = startScore;
-    //                 score = startScore;
-    //             }
-    //             this.updateScoreOfDuck(currentRoom.roomId, duck.id, turnScore);
-    //         });
-    //         this.updateCurrentTimeOfGame(currentRoom.roomId);
-    //         const roomAfterTurn = this.listRooms.find((room) => room.roomId === roomId);
-    //         return {
-    //             statusCode: 200,
-    //             isSuccess: true,
-    //             data: roomAfterTurn,
-    //             message: "COMPLETED-GAME",
-    //         };
-    //     } catch (error) {
-    //         logger.error(error?.message);
-    //         return {
-    //             statusCode: 500,
-    //             isSuccess: false,
-    //             errorMessage: "Error from server",
-    //         };
-    //     }
-    // }
-
     public async startTurn(roomId: string): Promise<ServiceResponse> {
         try {
             const currentRoom = this.listRooms.find((room) => room.roomId === roomId);
@@ -626,25 +581,37 @@ class RoomService implements IRoomService {
                 let score = startScore;
 
                 // Vòng lặp qua từng vịt
-                randomListDuck?.forEach((duck, index) => {
+                for (const duck of randomListDuck) {
+                    const index = randomListDuck.indexOf(duck);
                     let turnScore = score + (index % 6);
                     if (turnScore > endScore) {
                         turnScore = startScore;
                         score = startScore;
                     }
 
-                    duck.score.push(turnScore)
-                });
+                    duck.score.push(turnScore);
+                }
 
                 // Cập nhật currentTime cho room
                 this.updateCurrentTimeOfGame(currentRoom.roomId);
             }
 
-            const roomAfterTurn = this.listRooms.find((room) => room.roomId === roomId);
+            let maxTotalScore = 0;
+            ducks.forEach((duck) => {
+                const totalScore = duck.score.reduce((acc, score) => acc + score, 0);
+                if (totalScore > maxTotalScore) {
+                    maxTotalScore = totalScore;
+                }
+            })
+
+            const room = this.listRooms.find((room) => room.roomId === roomId);
             return {
                 statusCode: 200,
                 isSuccess: true,
-                data: roomAfterTurn,
+                data:  {
+                    room,
+                    maxTotalScore
+                },
                 message: "COMPLETED-GAME",
             };
         } catch (error) {

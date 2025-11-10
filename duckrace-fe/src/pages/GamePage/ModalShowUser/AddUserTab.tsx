@@ -10,8 +10,9 @@ const AddUserTab = () => {
   const handleAddUser = () => {
     if (!socket) return;
     if (addDuckText.trim() === "" || !addDuckText) return;
-    const users = addDuckText.split("\n").join(",").split(",");
-    socket.emit(SocketEvents.EMIT.ADD_DUCK_TO_ROOM, { roomId, ducks: users });
+    const rawUsers = addDuckText.split("\n").join(",").split(",").map((user) => user.trim()).filter((user) => user !== "");
+    const uniqueUsers = Array.from(new Set(rawUsers));
+    socket.emit(SocketEvents.EMIT.ADD_DUCK_TO_ROOM, { roomId, ducks: uniqueUsers });
   };
   return (
     <div className='h-full'>

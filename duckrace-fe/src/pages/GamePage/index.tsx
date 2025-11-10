@@ -22,11 +22,13 @@ import {toast} from "react-toastify";
 import CountdownTime from "./components/CountdownTime";
 import ListPlayer from "./ListPlayer";
 import ModalBet from "./ModalBet";
-import ModalRoomInfomation from "./ModalRoomInfomation";
+import ModalRoomInformation from "./ModalRoomInfomation";
 import ModalSetup from "./ModalSetup";
 import ModalShowRank from "./ModalShowRank";
 import ModalShowResult from "./ModalShowResult";
 import ModalUser from "./ModalShowUser";
+
+type RaceDuck = Omit<IDuck, "score"> & { score: number[] };
 
 const GamePage = () => {
     const socket = useSocket();
@@ -37,12 +39,17 @@ const GamePage = () => {
     const {roomId} = useParams();
     const navigate = useNavigate();
     const listDuckPickedRef = useRef<DuckPicked[]>([]);
+    const raceDataRef = useRef<RaceDuck[]>([]);
+    const turnIndexRef = useRef<number>(0);
+    const raceIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const {
         setCurrentGame,
         setOpenModalBet,
         setIsRacing,
         setIsResetGame,
         setGameStatus,
+        setMaxScore,
+        setRaceProgress,
         setIsCompletedAll,
         setListBettorOfDucks,
         isRacing,
@@ -170,7 +177,6 @@ const GamePage = () => {
         setIsResetGame,
         setGameStatus,
         setIsCompletedAll,
-        setOpenModalShowRank,
         setOpenModalShowResult,
         setListDuckPicked,
         setIsConfirmedBet,
@@ -239,9 +245,75 @@ const GamePage = () => {
         });
         socket.on(SocketEvents.ON.START_GAME_FAILED, () => {
         });
-        socket.on(SocketEvents.ON.START_TURN_SUCCESS, (data: AppResponse<Room>) => {
-            console.log("start turn success", data);
-            setListDucks(data.data?.ducks || []);
+        socket.on(SocketEvents.ON.START_TURN_SUCCESS, (data: AppResponse<any>) => {
+            // BƯỚC 1: NHẬN DỮ LIỆU VÀ LƯU VÀO REF
+            const raceDucks = (data.data?.room?.ducks || []) as RaceDuck[];
+            const maxTotalScore = data.data?.maxTotalScore || null;
+
+            setMaxScore(maxTotalScore);
+
+            if (raceDucks.length === 0) return;
+
+            raceDataRef.current = raceDucks;
+            turnIndexRef.current = 0;
+
+            // BƯỚC 2: DỌN DẸP INTERVAL CŨ (NẾU CÓ)
+            if (raceIntervalRef.current) {
+                clearInterval(raceIntervalRef.current);
+                raceIntervalRef.current = null;
+            }
+
+            // BƯỚC 3: CẬP NHẬT GIAO DIỆN VỀ TRẠNG THÁI BAN ĐẦU
+            const initialDucks: IDuck[] = raceDucks.map((duck) => ({
+                ...duck,
+                score: { oldScore: 0, newScore: 0, totalScore: 0 },
+            }));
+            setListDucks(initialDucks);
+
+            // BƯỚC 4: TẠO INTERVAL MỚI ĐỂ "PHÁT LẠI" CUỘC ĐUA
+            raceIntervalRef.current = setInterval(() => {
+                const currentTurn = turnIndexRef.current;
+                const fullRaceData = raceDataRef.current;
+
+                const maxTurns =
+                    fullRaceData.length > 0
+                        ? Math.max(...fullRaceData.map((d) => d.score.length))
+                        : 0;
+
+                setRaceProgress({turn: currentTurn, maxTurns});
+
+                if (currentTurn >= maxTurns) {
+                    if (raceIntervalRef.current) {
+                        clearInterval(raceIntervalRef.current);
+                        raceIntervalRef.current = null;
+                    }
+                    setGameStatus("completed");
+                    return;
+                }
+
+                // Cập nhật `setListDucks` với điểm số của giây hiện tại
+                const updatedDucks: IDuck[] = fullRaceData.map((duck) => {
+                    const scoreProgression = duck.score;
+                    const newScore = scoreProgression[currentTurn] || 0;
+                    
+                    const oldTotalScore = scoreProgression
+                        .slice(0, currentTurn)
+                        .reduce((sum, val) => sum + val, 0);
+                    
+                    const newTotalScore = oldTotalScore + newScore;
+
+                    return {
+                        ...duck,
+                        score: {
+                            oldScore: oldTotalScore,
+                            newScore: newScore,
+                            totalScore: newTotalScore,
+                        },
+                    };
+                });
+                setListDucks(updatedDucks);
+                turnIndexRef.current += 1;
+            }, 1000);
         });
         socket.on(SocketEvents.ON.START_TURN_FAILED, () => {
         });
@@ -259,6 +331,7 @@ const GamePage = () => {
                 setOpenModalShowResult(false);
                 setListDuckPicked([]);
                 setIsConfirmedBet(false);
+                setRaceProgress({ turn: 0, maxTurns: 0 });
                 navigate(
                     `${ROUTES.ROOM_DETAIL.replace(
                         ":roomId",
@@ -318,6 +391,9 @@ const GamePage = () => {
             socket.off(SocketEvents.ON.START_GAME_SUCCESS);
             socket.off(SocketEvents.ON.START_TURN_FAILED);
             socket.off(SocketEvents.ON.START_TURN_SUCCESS);
+            if (raceIntervalRef.current) {
+                clearInterval(raceIntervalRef.current);
+            }
             socket.off(SocketEvents.ON.START_GAME_FAILED);
             socket.off(SocketEvents.ON.LEFT_ROOM_SUCCESS);
             socket.off(SocketEvents.ON.LEFT_ROOM_FAILED);
@@ -343,6 +419,8 @@ const GamePage = () => {
         setIsRacing,
         setIsResetGame,
         setGameStatus,
+        setMaxScore,
+        setRaceProgress,
         setIsCompletedAll,
         setOpenModalBet,
         roomId,
@@ -518,7 +596,7 @@ const GamePage = () => {
                         src="/Icons/ExitIcon.png"
                     />
                 </div>
-                <ModalRoomInfomation/>
+                <ModalRoomInformation/>
                 <div
                     className="w-[500px] h-[150px] flex justify-center items-center absolute top-0 left-[50%] translate-x-[-50%]"
                     style={{filter: "drop-shadow(0 0 .3rem rgba(124, 6, 226, .874))"}}
