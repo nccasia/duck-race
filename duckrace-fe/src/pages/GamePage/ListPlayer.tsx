@@ -1,10 +1,39 @@
-import { SocketEvents } from "@/constants/SocketEvents";
-import { IGameResult } from "@/interface/game/Game";
-import { useSocket } from "@/providers/SocketProvider";
+import {SocketEvents} from "@/constants/SocketEvents";
+import {IGameResult} from "@/interface/game/Game";
+import {useSocket} from "@/providers/SocketProvider";
 import useGameStore from "@/stores/gameStore"; // Giả sử bạn có store để quản lý state
 import useRoomStore from "@/stores/roomStore";
 import useUserStore from "@/stores/userStore";
-import { useEffect, useRef } from "react";
+import {useEffect, useRef} from "react";
+
+type DuckPixelPosition = {
+    x: number;
+    y: number;
+    posStart: number;
+    posEnd: number;
+    duckIcon: number;
+};
+
+const drawBubble = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number,
+)=> {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+}
 
 const ListPlayer = () => {
   const socket = useSocket();
@@ -21,42 +50,41 @@ const ListPlayer = () => {
   const startGameLinePosition = useRef<number | null>(null); // Lưu vị trí của background 2
   const players = useRoomStore((state) => state.listDucks); // Lấy danh sách player từ store
   const isResetGame = useGameStore((state) => state.isResetGame); // Lấy trạng thái reset vị trí từ store
-  const setIsCompletedAll = useGameStore((state) => state.setIsCompletedAll); // Lấy danh sách player từ store
-  const setGameStatus = useGameStore((state) => state.setGameStatus); // Lấy danh sách player từ store
-  const isResetRef = useRef<boolean>(false); // Lưu trạng thái reset vị trí
+  const setIsCompletedAll = useGameStore((state) => state.setIsCompletedAll); // Lấy danh sách player từ storeuseGameStore((state) => state.setGameStatus);useRef<boolean>(false);
   const isEndGameRef = useRef<boolean>(false); // Lưu trạng thái kết thúc game
   const isRacingRef = useRef<boolean>(false); // Lưu trạng thái đua của game
   const resetGameRef = useRef<boolean>(false); // Lưu trạng thái reset game
   const gameStatus = useGameStore((state) => state.gameStatus); // Lấy trạng thái game từ store
+    const duckPositionsRef = useRef<Map<string, DuckPixelPosition>>(new Map());
+    const kickstartTimeRef = useRef<number>(0);
+    const totalPlayerRef = useRef<number>(0);
 
-  const { isRacing, setGameResult } = useGameStore(); // Lấy trạng thái đua của game từ store
-
-  // Dùng ref để lưu vị trí của các vịt
-  const duckPositionsRef = useRef<Map<number, { x: number; y: number; v: number; isReset: boolean; duckIcon: number }>>(
-    new Map()
-  );
-  const totalPlayerRef = useRef<number>(0); // Lưu số lượng player
+  const { isRacing, setGameResult, gameResult, maxScore, raceProgress } = useGameStore(); // Lấy trạng thái đua của game từ store
 
   useEffect(() => {
     if (!socket) return;
     socket.on(SocketEvents.ON.END_GAME_SUCCESS, (data: IGameResult) => {
-      isEndGameRef.current = true;
-      setGameStatus("completed");
-      setGameResult(data);
-      if (currentUser?.wallet === undefined) return;
-      if (data.winners?.length > 0 && data.winners?.includes(currentUser?.id ?? "")) {
-        changeWallet(currentUser.wallet + data.winBet);
-        return;
-      }
-      if (data.bettors?.length > 0 && data.winners.length === 0 && data.bettors?.includes(currentUser?.id ?? "")) {
-        changeWallet(currentUser.wallet + data.winBet);
-        return;
-      }
+      setGameResult(data); // Chỉ lưu kết quả, không thay đổi trạng thái game
+        console.log("data", data);
     });
     return () => {
       socket.off(SocketEvents.ON.END_GAME_SUCCESS);
     };
-  }, [changeWallet, currentUser?.id, currentUser.wallet, setGameResult, setGameStatus, socket]);
+  }, [setGameResult, socket]);
+
+  useEffect(() => {
+    if (gameStatus === "completed" && gameResult) {
+      isEndGameRef.current = true;
+      if (currentUser?.wallet !== undefined) {
+        const isWinner = gameResult.winners?.includes(currentUser?.id ?? "");
+        const isBettorWithNoWinner =
+          gameResult.winners?.length === 0 && gameResult.bettors?.includes(currentUser?.id ?? "");
+        if (isWinner || isBettorWithNoWinner) {
+          changeWallet(currentUser.wallet + gameResult.winBet);
+        }
+      }
+    }
+  }, [gameStatus, gameResult, currentUser, changeWallet]);
 
   useEffect(() => {
     resetGameRef.current = isResetGame;
@@ -91,24 +119,54 @@ const ListPlayer = () => {
 
   // Cập nhật vị trí và tốc độ của vịt mỗi khi players thay đổi
   useEffect(() => {
-    players.forEach((player, index) => {
-      const duckPosition = duckPositionsRef.current.get(index) || {
-        x: 0,
-        y: index,
-        v: 0, // Khởi tạo tốc độ là 0 khi không có sự thay đổi\
-        isReset: false,
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const startX = 5;
+    const endX = canvas.width - 100;
+    const raceDistance = endX - startX;
+
+    const currentPlayerIds = new Set<string>();
+    players.forEach((player) => {
+      // player.id is the unique identifier
+      const playerId = player.id;
+      if (!playerId) return;
+      currentPlayerIds.add(playerId);
+
+      const duckPosition = duckPositionsRef.current.get(playerId) || {
+        x: 5,
+        y: 0, // Y position is determined by index in the render loop
+        posStart: 5,
+        posEnd: 5,
         duckIcon: player.colorNumber,
       };
 
-      // Tính toán tốc độ dựa trên sự thay đổi của điểm số (newScore - oldScore)
-      const speed = player.score.newScore - player.score.oldScore; // Tính tốc độ\
-      duckPosition.v = speed; // Cập nhật lại tốc độ của
-      // duckPosition.v = player.score.newScore >= 110 ? 0 : speed; // Cập nhật lại tốc độ của vịt
+      if (maxScore && maxScore > 0) {
+        duckPosition.posStart = startX + (player.score.oldScore / maxScore) * raceDistance;
+        duckPosition.posEnd = startX + (player.score.totalScore / maxScore) * raceDistance;
+      } else {
+        duckPosition.posStart = startX;
+        duckPosition.posEnd = startX;
+      }
 
-      duckPositionsRef.current.set(index, duckPosition); // Lưu lại vị trí và tốc độ
+      if (!isRacing) {
+        duckPosition.x = startX;
+      }
+
+      duckPosition.duckIcon = player.colorNumber;
+      duckPositionsRef.current.set(playerId, duckPosition);
     });
-    totalPlayerRef.current = players.length; // Lưu lại số lượng player
-  }, [players]); // Khi players thay đổi, sẽ cập nhật lại vị trí và tốc độ của vịt
+
+    // Remove positions for players who have left
+    for (const key of duckPositionsRef.current.keys()) {
+      if (!currentPlayerIds.has(key)) {
+        duckPositionsRef.current.delete(key);
+      }
+    }
+
+    kickstartTimeRef.current = Date.now();
+    totalPlayerRef.current = players.length;
+  }, [players, maxScore, isRacing]);
 
   useEffect(() => {
     if (isRacingRef) {
@@ -121,6 +179,7 @@ const ListPlayer = () => {
   useEffect(() => {
     if (gameStatus !== "completed") {
       isEndGameRef.current = false;
+      endGameLinePosition.current = null;
     }
   }, [gameStatus]);
   useEffect(() => {
@@ -137,135 +196,125 @@ const ListPlayer = () => {
     resizeWindow(); // Gọi hàm resizeWindow khi component được mount
     window.addEventListener("resize", resizeWindow); // Gọi hàm resizeWindow khi kích thước cửa sổ thay đổi
 
-    if (context) {
-      context.scale(ratio, ratio);
-    }
-    let lastTime = 0; // Lưu lại thời gian của lần vẽ trước
+    let animationFrameId: number;
 
-    const animateDucks = (timestamp: number) => {
-      const deltaTime = timestamp - lastTime; // Thời gian trôi qua từ lần vẽ trước
-      if (deltaTime < 16) {
-        // Giới hạn tốc độ tối đa của vịt
-        requestAnimationFrame(animateDucks);
-        return;
-      }
-      lastTime = timestamp;
+    const animateDucks = () => {
+        context.clearRect(0, 0, canvas.width, canvas.height);
 
-      context.clearRect(0, 0, canvas?.width ?? 0, canvas?.height ?? 0); // Xóa canvas
-
-      // Vẽ background di chuyển
-      const backgroundSpeed = 0.5; // Tốc độ chuyển động của background
-      let background1X = background1Position.current - backgroundSpeed - (isResetRef.current ? 1 : 0);
-      let background2X = background2Position.current - backgroundSpeed - (isResetRef.current ? 1 : 0);
-
-      if (backgroundImageRef1.current && backgroundImageRef2.current) {
-        // Vẽ ảnh nền từ bên trái
-        context.drawImage(backgroundImageRef1.current, background1X, 0, canvas.width + 10, canvas.height); // Background 1
-        context.drawImage(backgroundImageRef2.current, background2X + canvas.width, 0, canvas.width + 10, canvas.height); // Background 2
-      }
-
-      // Kiểm tra và reset lại vị trí của background khi nó ra ngoài canvas
-      if (background1X <= -canvas.width) {
-        background1X = canvas.width; // Reset background1 về vị trí bên phải
-      }
-      if (background2X <= -2 * canvas.width) {
-        background2X = 0; // Reset background2 về vị trí bên phải
-      }
-
-      // Cập nhật vị trí của background
-      background1Position.current = background1X;
-      background2Position.current = background2X;
-
-      // Vẽ vạch đích
-      const endGameLineSpeed = 0.5;
-      if (endGameLineRef.current && isEndGameRef.current) {
-        let endGameLineX = (endGameLinePosition.current ?? canvas.width) - endGameLineSpeed - (isResetRef.current ? 1 : 0);
-        if (endGameLineRef.current) {
-          context.drawImage(endGameLineRef.current, endGameLineX, canvas.height / 5, 30, canvas.height);
+        const backgroundSpeed = 0.5;
+        let background1X = background1Position.current - backgroundSpeed;
+        let background2X = background2Position.current - backgroundSpeed;
+        if (backgroundImageRef1.current && backgroundImageRef2.current) {
+            context.drawImage(backgroundImageRef1.current, background1X, 0, canvas.width + 10, canvas.height);
+            context.drawImage(backgroundImageRef2.current, background2X + canvas.width, 0, canvas.width + 10, canvas.height);
         }
-        if (endGameLineX <= canvas.width - canvas.height / 5) {
-          endGameLineX = canvas.width - canvas.height / 5;
-        }
-        endGameLinePosition.current = endGameLineX;
-      }
+        if (background1X <= -canvas.width) background1X = canvas.width;
+        if (background2X <= -2 * canvas.width) background2X = 0;
+        background1Position.current = background1X;
+        background2Position.current = background2X;
 
-      // Vẽ vạch bắt đầu
-      const startGameLineSpeed = 0.5;
-      if (startGameLineRef.current) {
-        let startGameLineX = (startGameLinePosition.current ?? 60) - startGameLineSpeed;
+        const topOffset = canvas.height / 3.5; // Relative top offset to avoid modals
+        const bottomOffset = canvas.height / 10; // Relative space at the bottom
+        const availableHeight = canvas.height - topOffset - bottomOffset;
+
+        if (raceProgress.maxTurns > 0 && raceProgress.turn >= raceProgress.maxTurns - 3) {
+            isEndGameRef.current = true;
+        }
+
+        if (endGameLineRef.current && isEndGameRef.current) {
+            let endGameLineX = (endGameLinePosition.current ?? canvas.width) - 0.5;
+            context.drawImage(endGameLineRef.current, endGameLineX, canvas.height / 5, 30, canvas.height);
+            if (endGameLineX <= canvas.width - canvas.height / 5) {
+                endGameLineX = canvas.width - canvas.height / 5;
+            }
+            endGameLinePosition.current = endGameLineX;
+        }
         if (startGameLineRef.current) {
-          context.drawImage(startGameLineRef.current, startGameLineX, canvas.height / 5, 30, canvas.height);
-        }
-        if (startGameLineX <= 60 && !isRacingRef.current) {
-          startGameLineX = 60;
-        }
-        startGameLinePosition.current = startGameLineX;
-      }
-
-      let greaterThan0 = 0;
-      duckPositionsRef.current.forEach((duckPosition) => {
-        if (duckPosition.x > canvas.width / 2) {
-          isResetRef.current = true;
-        }
-        if (duckPosition.x > 0) {
-          greaterThan0++;
-        }
-      });
-      if (greaterThan0 <= 5) {
-        isResetRef.current = false;
-      }
-      let completedGameCount = 0;
-      // Lặp qua danh sách player để vẽ và cập nhật vị trí của mỗi vịt
-      duckPositionsRef.current.forEach((duckPosition, playerId) => {
-        // Tính tốc độ dựa trên điểm số
-        const speed = duckPosition.v * 0.2; // Tốc độ được lấy từ v
-        const olePosition = duckPosition.x;
-        duckPosition.x =
-          duckPosition.x + (isEndGameRef.current ? 2 : speed - 4 * 0.05 - (isResetRef.current && speed !== 0 ? 1 : 0)); // Cập nhật vị trí theo tốc độ
-        duckPosition.y = canvas.height / 5 + playerId * ((canvas.height - 180) / totalPlayerRef.current); // Vị trí dọc của vịt
-
-        // Nếu vịt vượt quá chiều rộng của canvas, reset lại vị trí
-        if (duckPosition.x > canvas.width - 100) {
-          completedGameCount++;
-          duckPosition.x = canvas.width - 100; // Đặt lại vị trí x của vịt (cộng thêm một chút để bắt đầu từ ngoài màn hình)
+            let startGameLineX = (startGameLinePosition.current ?? 60) - 0.5;
+            context.drawImage(startGameLineRef.current, startGameLineX, canvas.height / 5, 30, canvas.height);
+            if (startGameLineX <= 60 && !isRacingRef.current) startGameLineX = 60;
+            startGameLinePosition.current = startGameLineX;
         }
 
-        if (!isRacingRef.current && duckPosition.x <= 5) {
-          duckPosition.x = 5;
-        }
-        if (!isRacingRef.current) {
-          duckPosition.x = olePosition;
-        }
-        if (resetGameRef.current) {
-          duckPosition.x = 5;
-        }
-        // Cập nhật lại vị trí vịt trong ref
-        duckPositionsRef.current.set(playerId, duckPosition);
+        // Nội suy vị trí của vịt trong mỗi khung hình
+        const elapsedTime = (Date.now() - kickstartTimeRef.current) / 1000; // thời gian trôi qua trong giây
+        const interpolationFactor = Math.min(elapsedTime, 1.0); // không vượt quá 1
+        let completedGameCount = 0;
+        const spacing = totalPlayerRef.current > 1 ? availableHeight / (totalPlayerRef.current - 1) : 0;
 
-        const duckImage = duckImagesRef.current[duckPosition.duckIcon - 1];
-        // Vẽ vịt lên canvas
-        if (duckImage) {
-          context.drawImage(duckImage, duckPosition.x, duckPosition.y, 60, 60); // Vịt có kích thước 50x50px
+        const stablePlayers = [...players].sort((a, b) => b.order - a.order);
+
+        stablePlayers.forEach((player, index) => {
+            if (!player.id) return;
+            const duckPosition = duckPositionsRef.current.get(player.id);
+            if (!duckPosition) return;
+
+            if (isRacingRef.current) {
+                // Nội suy vị trí X
+                duckPosition.x = duckPosition.posStart + (duckPosition.posEnd - duckPosition.posStart) * interpolationFactor;
+            }
+            
+            // New Y position calculation based on the current array index
+            duckPosition.y = topOffset + index * spacing;
+
+            if (duckPosition.x >= canvas.width - 100) {
+                completedGameCount++;
+                duckPosition.x = canvas.width - 100;
+            }
+            if (resetGameRef.current) {
+                duckPosition.x = 5;
+            }
+
+            const duckImage = duckImagesRef.current[duckPosition.duckIcon - 1];
+            if (duckImage) {
+                context.drawImage(duckImage, duckPosition.x, duckPosition.y, 60, 60);
+            }
+            
+            // Draw player name in a bubble
+            if (player && player.name) {
+                context.font = "bold 12px 'DVN-TitanOne', sans-serif";
+                const playerName = player.name;
+                const textMetrics = context.measureText(playerName);
+                const bubbleWidth = textMetrics.width + 20;
+                const bubbleHeight = 24;
+                const bubbleX = duckPosition.x + 30 - bubbleWidth / 2;
+                const bubbleY = duckPosition.y - bubbleHeight - 10;
+
+                // Draw the speech bubble
+                context.fillStyle = "rgba(255, 255, 255, 0.9)";
+                context.strokeStyle = "#4A4A4A";
+                context.lineWidth = 1;
+                drawBubble(context, bubbleX, bubbleY, bubbleWidth, bubbleHeight, 10);
+                context.fill();
+                context.stroke();
+
+                // Draw the player name
+                context.fillStyle = "#000000";
+                context.textAlign = "center";
+                context.textBaseline = "middle";
+                context.fillText(playerName, duckPosition.x + 30, bubbleY + bubbleHeight / 2);
+            }
+
+            context.font = "12px Arial";
+            context.fillStyle = "black";
+            context.textAlign = "center";
+            context.fillText(`${player.order}`, duckPosition.x + 31, duckPosition.y + 47);
+        });
+
+        if (completedGameCount === totalPlayerRef.current && completedGameCount !== 0) {
+            setIsCompletedAll(true);
         }
-        context.font = "12px Arial";
-        context.fillStyle = "black";
-        context.textAlign = "center";
-        context.fillText(`${playerId + 1}`, duckPosition.x + 31, duckPosition.y + 47);
-      });
-      if (completedGameCount === totalPlayerRef.current && completedGameCount !== 0) {
-        setIsCompletedAll(true);
-      }
 
-      requestAnimationFrame(animateDucks); // Tiếp tục vẽ lại vịt
-    };
+        animationFrameId = requestAnimationFrame(animateDucks);
+        };
 
-    requestAnimationFrame(animateDucks); // Bắt đầu vẽ vịt
+    animateDucks();
 
     return () => {
-      cancelAnimationFrame(lastTime);
-      window.removeEventListener("resize", resizeWindow); // Hủy bỏ sự kiện khi component bị unmount
-    };
-  }, []);
+          cancelAnimationFrame(animationFrameId);
+          window.removeEventListener("resize", resizeWindow);
+        };
+  }, [setIsCompletedAll, raceProgress, players]);
 
   return (
     <div className='relative bg-[#21107266] rounded-lg '>

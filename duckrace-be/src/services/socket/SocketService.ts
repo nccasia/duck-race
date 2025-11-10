@@ -296,36 +296,6 @@ class SocketService implements ISocketService {
                     }
                 }
             }
-            // const timeInterval = setInterval(async () => {
-            //     try {
-            //         const turn = await this._roomService.startTurn(data.roomId);
-            //         this.socketServer.to(startGameResponse.data.roomId).emit(SocketEvents.EMIT.START_TURN_SUCCESS, turn);
-            //         if (turn.isSuccess) {
-            //             const check = this._roomService.checkGameCompleted(data.roomId);
-            //             if (check) {
-            //                 const endGameResponse = await this._gameService.endGame(data.gameId);
-            //                 if (endGameResponse.isSuccess) {
-            //                     const dataEmit = {
-            //                         winners: endGameResponse.data.winners,
-            //                         gameId: data.gameId,
-            //                         totalBet: endGameResponse.data.totalBet,
-            //                         winBet: Math.floor(
-            //                             endGameResponse.data.winners.length > 0
-            //                                 ? endGameResponse.data.totalBet / endGameResponse.data.winners.length
-            //                                 : endGameResponse.data.totalBet / (endGameResponse.data.bettors.length || 1)
-            //                         ),
-            //                         bettors: endGameResponse.data.bettors,
-            //                     };
-            //                     this.socketServer.to(data.roomId).emit(SocketEvents.EMIT.END_GAME_SUCCESS, dataEmit);
-            //                 }
-            //                 clearInterval(timeInterval);
-            //             }
-            //         }
-            //     } catch (error) {
-            //         console.error("Error in game loop:", error);
-            //         clearInterval(timeInterval);
-            //     }
-            // }, 1000);
         } else {
             console.log(`User ${socket.id} start game failed: ${startGameResponse.errorMessage}`);
             this.socketServer.to(startGameResponse.data.roomId).emit(SocketEvents.EMIT.START_GAME_FAILED, startGameResponse);
@@ -415,7 +385,7 @@ class SocketService implements ISocketService {
 
     onDisconnect = async (socket: Socket) => {
         const userId = socket.handshake.query.userId as string;
-        this.onLeaveRoom(socket, {userId, roomId: ""});
+        await this.onLeaveRoom(socket, {userId, roomId: ""});
     };
 }
 

@@ -112,6 +112,7 @@ const ModalSetup = () => {
                 onKeyDown={(e) => handleKeyDown(e, position)}
                 value={timeInput[`position${position}` as keyof TimeInput]}
                 type='text'
+                readOnly
                 className='w-[40px] bg-gray-600 text-white h-[50px] text-center text-[30px] font-titan border-2 border-gray-500 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500'
               />
             ))}
