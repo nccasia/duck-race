@@ -62,7 +62,7 @@ const ListPlayer = () => {
     const totalPlayerRef = useRef<number>(0);
 
     const {isRacing, setGameResult, gameResult, maxScore, raceProgress} =
-        useGameStore(); // Lấy trạng thái đua của game từ store
+        useGameStore();
 
     const playersRef = useRef(players);
     useEffect(() => {
@@ -302,7 +302,7 @@ const ListPlayer = () => {
 
                 // 4. Vẽ
                 context.save();
-                context.setTransform(1, 0, -0.3, 1, 0, 0);
+                context.setTransform(1, 0, -0.1, 1, 0, 0);
                 context.drawImage(
                     endGameLineRef.current,
                     endGameLineX + 100,
@@ -359,9 +359,9 @@ const ListPlayer = () => {
                 // New Y position calculation based on the current array index
                 duckPosition.y = topOffset + index * spacing; // Vị trí Y CƠ BẢN
 
-                if (duckPosition.x >= canvas.width - 150 - 100) {
+                if (duckPosition.x >= canvas.width - 300) {
                     completedGameCount++;
-                    duckPosition.x = canvas.width - 150 - 100;
+                    duckPosition.x = canvas.width - 300;
                 }
                 if (resetGameRef.current) {
                     duckPosition.x = 5;
@@ -380,11 +380,37 @@ const ListPlayer = () => {
                 const finalDrawY = duckPosition.y + bobbingOffset;
                 // --- KẾT THÚC HIỆU ỨNG ---
 
+                // --- TÍNH TOÁN SKEW ĐỘNG ---
+                // Logic này tính toán độ nghiêng (skew) một cách linh động dựa trên tiến trình của vịt
+                // để khớp với phối cảnh của vạch bắt đầu (-0.3) và vạch đích (-0.1).
+
+                // 1. Xác định các thông số của đường đua
+                const startX = 50;
+                const endX = canvas.width - 300;
+                const raceTrackLength = endX - startX;
+
+                // 2. Tính tỷ lệ hoàn thành đường đua (từ 0 đến 1)
+                const progressRatio =
+                    raceTrackLength > 0 ? (duckPosition.x - startX) / raceTrackLength : 0;
+                const t = Math.max(0, Math.min(1, progressRatio)); // Kẹp giá trị t trong khoảng [0, 1]
+
+                // 3. Nội suy tuyến tính để tìm hệ số skew hiện tại
+                const startSkew = -0.3;
+                const endSkew = -0.1;
+                const currentSkew = startSkew + (endSkew - startSkew) * t;
+
+                // Dùng skew cố định -0.35 khi chưa đua, và skew động khi đang đua.
+                const skewToUse = !isRacingRef.current ? -0.35 : currentSkew;
+
+                // 4. Tính toán vị trí X cuối cùng để vẽ, đã bao gồm skew được chọn
+                const dynamicSkewOffset = skewToUse * finalDrawY;
+                // --- KẾT THÚC TÍNH TOÁN SKEW ĐỘNG ---
+
                 const duckImage = duckImagesRef.current[duckPosition.duckIcon - 1];
                 if (duckImage) {
                     context.drawImage(
                         duckImage,
-                        duckPosition.x + 200 + -0.3 * finalDrawY, // Dùng finalDrawY cho skew
+                        duckPosition.x + 200 + dynamicSkewOffset, // Dùng skew động
                         finalDrawY, // Dùng finalDrawY cho Y
                         100,
                         100,
@@ -406,7 +432,7 @@ const ListPlayer = () => {
                     const bubbleX =
                         duckPosition.x +
                         230 +
-                        -0.3 * finalDrawY + // Dùng finalDrawY cho skew
+                        dynamicSkewOffset + // Dùng skew động
                         30 -
                         bubbleWidth / 2;
                     const bubbleY = finalDrawY - bubbleHeight - 10; // Dùng finalDrawY cho Y
@@ -425,7 +451,7 @@ const ListPlayer = () => {
                     context.textBaseline = "middle";
                     context.fillText(
                         playerName,
-                        duckPosition.x + 230 + -0.3 * finalDrawY + 30, // Dùng finalDrawY cho skew
+                        duckPosition.x + 230 + dynamicSkewOffset + 30, // Dùng skew động
                         bubbleY + bubbleHeight / 2, // bubbleY đã tính từ finalDrawY
                     );
                 }
@@ -433,10 +459,10 @@ const ListPlayer = () => {
                 context.font = "16px Arial";
                 context.fillStyle = "black";
                 context.textAlign = "center";
-                // <<< CHỈNH SỬA: Dùng finalDrawY cho số thứ tự để nó dập dìu cùng vịt
+                // Dùng finalDrawY cho số thứ tự để nó dập dìu cùng vịt
                 context.fillText(
                     `${player.order}`,
-                    duckPosition.x + 200 + -0.3 * finalDrawY + 55, // Dùng finalDrawY cho skew
+                    duckPosition.x + 200 + dynamicSkewOffset + 55, // Dùng skew động
                     finalDrawY + 73, // Dùng finalDrawY cho Y
                 );
             });
