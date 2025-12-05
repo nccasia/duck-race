@@ -9,7 +9,7 @@ interface IModalShowResultProps {
   onResetGame: () => void;
 }
 const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
-  const { isCompletedAll, gameStatus, setOpenModalBet, gameResult } =
+  const {gameStatus, setOpenModalBet, gameResult } =
     useGameStore();
   const {
     listDucks,
@@ -27,11 +27,11 @@ const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
   }, [listDucks]);
 
   useEffect(() => {
-    if (isCompletedAll) {
+    if (gameStatus === "completed") {
       setOpenModalShowResult(true);
       setOpenModalBet(false);
     }
-  }, [isCompletedAll, setOpenModalBet, setOpenModalShowResult]);
+  }, [gameStatus, setOpenModalBet, setOpenModalShowResult]);
 
   const handleOpenModalShowRank = () => {
     setOpenModalShowRank(true);
@@ -55,11 +55,11 @@ const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
             <div
               className={` flex items-center justify-center bg-center bg-no-repeat bg-cover w-[70px] h-[58px] mr-2 absolute left-[50px] bottom-[105px]`}
               style={{
-                backgroundImage: `url("/duck-${listPlayerAfterSort[1]?.colorNumber}.png")`,
+                backgroundImage: `url("/duck-${listPlayerAfterSort[2]?.colorNumber}.png")`,
               }}
             >
               <span className="text-gray-500 text-[12px] top-[30px] left-[27px] w-[22px] h-[22px] flex items-center line-clamp-1 justify-center absolute ">
-                {listPlayerAfterSort[1]?.order}
+                {listPlayerAfterSort[2]?.order}
               </span>
             </div>
             <div
@@ -75,11 +75,11 @@ const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
             <div
               className={` flex items-center justify-center bg-center bg-no-repeat bg-cover w-[70px] h-[58px] mr-2 absolute bottom-[130px] right-[30px]`}
               style={{
-                backgroundImage: `url("/duck-${listPlayerAfterSort[2]?.colorNumber}.png")`,
+                backgroundImage: `url("/duck-${listPlayerAfterSort[1]?.colorNumber}.png")`,
               }}
             >
               <span className="text-gray-500 text-[12px] top-[30px] left-[27px] w-[22px] h-[22px] flex items-center line-clamp-1 justify-center absolute">
-                {listPlayerAfterSort[2]?.order}
+                {listPlayerAfterSort[1]?.order}
               </span>
             </div>
           </div>
@@ -100,7 +100,7 @@ const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
             </div>
           </div>
           <div className="flex justify-center items-center gap-2 mt-5">
-            {isCompletedAll ? (
+            {gameStatus === "completed" ? (
               <button
                 disabled={
                   gameStatus !== "completed" ||

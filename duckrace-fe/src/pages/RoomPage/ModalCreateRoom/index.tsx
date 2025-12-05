@@ -31,7 +31,6 @@ const ModalCreateRoom = () => {
   );
 
   const handleCreateNewRoom = () => {
-    console.log("create room data", createRoomData);
     if (!socket) return;
     if (!createRoomData.roomName || createRoomData.roomBet < 0 || (createRoomData.roomBet <= 0 && createRoomData.isBetting)) {
       toast.warning("Please fill in all fields");
