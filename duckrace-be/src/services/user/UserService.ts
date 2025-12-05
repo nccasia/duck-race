@@ -20,25 +20,29 @@ class UserService implements IUserService {
 
   public async getAccessTokenAsync(data: GetAccessToken): Promise<ServiceResponse> {
     try {
-      const { hashData, userData } = data;
+      const { hashData } = data;
       const checkHash = await this.verifyHashUser(hashData);
       if (!checkHash.isSuccess) {
         return checkHash;
       }
+      const userData = checkHash.data as MezonUser;
       const checkUser = await this.prismaService.user.findUnique({
         where: {
-          mezonUserId: userData.mezonUserId,
+          mezonUserId: userData.id,
         },
       });
       if (!checkUser) {
-        const addUserResponse = await this.addUser(userData);
+        const addUserResponse = await this.addUser({
+          ...userData,
+        });
+
         if (!addUserResponse.isSuccess) {
           return addUserResponse;
         }
       }
       const getUserResponse = await this.prismaService.user.findUnique({
         where: {
-          mezonUserId: userData.mezonUserId,
+          mezonUserId: userData.id,
         },
       });
       if (!getUserResponse) {
@@ -53,7 +57,6 @@ class UserService implements IUserService {
         mezonUserId: getUserResponse.mezonUserId,
         userName: getUserResponse.userName,
         playerName: getUserResponse.playerName,
-        email: getUserResponse.email,
         wallet: getUserResponse.wallet,
       };
       const accessToken = this.jwtService.generateAccessToken(generateTokenData);
@@ -66,11 +69,12 @@ class UserService implements IUserService {
         },
       };
     } catch (error) {
-      logger.error(error?.message);
+      console.log("Error in UserService -> getAccessTokenAsync", error);
+      // logger.error(error?.message);
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorMessage: "Lỗi đăng nhập từ hệ thống",
       };
     }
   }
@@ -126,26 +130,29 @@ class UserService implements IUserService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống kkk",
+        errorMessage: "Lỗi đăng nhập từ Mezon",
       };
     }
   }
 
-  public async addUser(user: User): Promise<ServiceResponse> {
+  public async addUser(user: MezonUser): Promise<ServiceResponse> {
     // Implementation here
     try {
-      console.log("add user information", user);
-      if (!user.mezonUserId || !user.userName) {
+      if (!user.id || !user.username) {
         return {
           statusCode: 400,
           isSuccess: false,
           errorMessage: "Vui lòng cung cấp đủ thông tin người dùng!",
         };
       }
-      if (!user.wallet) user.wallet = 0;
-      delete user.id;
       const addUserResponse = await this.prismaService.user.create({
-        data: user,
+        data: {
+          wallet: 0,
+          mezonUserId: user.id,
+          userName: user.username,
+          playerName: user?.display_name || user.username,
+          avatar: user?.avatar_url
+        }
       });
       return {
         statusCode: 200,

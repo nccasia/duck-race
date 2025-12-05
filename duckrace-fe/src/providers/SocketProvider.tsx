@@ -16,11 +16,9 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [socketInitialized, setSocketInitialized] = useState(false);
 
   const currentUser = useUserStore((state) => state.currentUser);
-  const userHashInfo = useUserStore((state) => state.userHashInfo);
   const setCurrentUser = useUserStore((state) => state.setCurrentUser);
-  console.log(currentUser);
   useEffect(() => {
-    if (currentUser.id && !socketInitialized && userHashInfo) {
+    if (currentUser.id && !socketInitialized) {
       socket.current = io(import.meta.env.VITE_BACKEND_URL, {
         withCredentials: true,
         query: {
@@ -44,7 +42,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser.id, setCurrentUser, userHashInfo]);
+  }, [currentUser, setCurrentUser]);
 
   return <SocketContext.Provider value={socket.current}>{children}</SocketContext.Provider>;
 };

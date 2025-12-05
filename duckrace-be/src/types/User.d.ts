@@ -23,6 +23,6 @@ type HashData = {
   query_id: string;
   user: string;
   auth_date: number;
-  signatire: string;
+  signature: string;
   hash: string;
 };

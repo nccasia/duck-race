@@ -4,17 +4,18 @@ import jwksClient from "jwks-rsa";
 
 export default class JwtService implements IJWTService {
   private accessTokenSecret!: string;
-  private accessTokenExpriedIn!: number;
+  private accessTokenExpiresIn!: number;
+  
   constructor() {
-    this.accessTokenSecret = String(process.env.ACCESS_TOKEN_SECRET);
-    this.accessTokenExpriedIn = Number(process.env.ACCESS_TOKEN_EXPIRES_IN);
+    this.accessTokenSecret = String(process.env.ACCESS_TOKEN_SECRET)
+    this.accessTokenExpiresIn = Number(process.env.ACCESS_TOKEN_EXPIRES_IN) || 3600;
   }
 
   generateAccessToken(payload: any) {
     const token = jwt.sign({ isCredential: true, ...payload }, this.accessTokenSecret, {
-      expiresIn: this.accessTokenExpriedIn,
+      expiresIn: this.accessTokenExpiresIn,
     });
-    const expiresAt = new Date(Date.now() + this.accessTokenExpriedIn * 1000);
+    const expiresAt = new Date(Date.now() + this.accessTokenExpiresIn * 1000);
     return {
       token,
       expiresAt,
@@ -29,6 +30,7 @@ export default class JwtService implements IJWTService {
       return false;
     }
   }
+  
   getTokenPayload(token: string) {
     return jwt.decode(token);
   }
