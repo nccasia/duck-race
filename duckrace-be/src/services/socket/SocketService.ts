@@ -83,19 +83,20 @@ class SocketService implements ISocketService {
         const socketUser: User = {
             id: mezonUser?.id,
             socketId: socket.id,
-            mezonUserId: mezonUser?.mezon_id,
+            mezonUserId: mezonUser.id,
             playerName: mezonUser?.display_name,
             userName: mezonUser?.username,
             wallet: walletBalance,
             email: mezonUser?.email,
             avatar: mezonUser?.avatar_url,
         };
-        const addUserResponse = await this._userService.addUser(socketUser);
+        const addUserResponse = await this._userService.addUser(mezonUser);
+
         if (addUserResponse.isSuccess) {
-            console.log(`User ${mezonUser.mezon_id} visited game`);
+            console.log(`User ${mezonUser.id} visited game`);
             socket.emit(SocketEvents.EMIT.USER_VISIT_GAME_SUCCESS, socketUser);
         } else {
-            console.log(`User ${mezonUser.mezon_id} visit game failed: ${addUserResponse.errorMessage}`);
+            console.log(`User ${mezonUser.id} visit game failed: ${addUserResponse.errorMessage}`);
             socket.emit(SocketEvents.EMIT.USER_VISIT_GAME_FAILED, addUserResponse);
         }
     };

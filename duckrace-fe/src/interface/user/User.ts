@@ -8,12 +8,7 @@ export interface User {
   isConnected?: boolean;
 }
 
-export interface IUserHashInfo {
-  hashData: string;
-}
-
 export interface IGetAccessToken {
-  userData: User;
   hashData: string;
 }
 

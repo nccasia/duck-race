@@ -3,7 +3,7 @@ export interface IAccessTokenPayload {
   mezonUserId: string;
   userName: string;
   playerName: string;
-  email: string;
+  email?: string;
   wallet: number;
 }
 export interface IAccessTokenResponse {

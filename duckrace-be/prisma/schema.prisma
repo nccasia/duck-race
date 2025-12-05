@@ -18,7 +18,7 @@ model User {
   playerName      String?
   userName        String
   mezonUserId     String    @unique
-  email           String    @unique
+  email           String?
   avatar          String?
   wallet          Int       @default(0)
   createdAt       DateTime  @default(now())
@@ -37,6 +37,6 @@ model Transaction {
   note       String?
   createdAt  DateTime @default(now())
 
-  @@index([userId]) // Tạo index trên userId
+  @@index([userId])
 }
 
