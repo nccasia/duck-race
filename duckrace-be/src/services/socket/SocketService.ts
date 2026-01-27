@@ -81,9 +81,9 @@ class SocketService implements ISocketService {
 
         const mezonUser = hashUserResponse?.data as MezonUser;
         const socketUser: User = {
-            id: mezonUser?.id,
+            id: String(mezonUser?.id),
             socketId: socket.id,
-            mezonUserId: mezonUser.id,
+            mezonUserId: String(mezonUser.id),
             playerName: mezonUser?.display_name,
             userName: mezonUser?.username,
             wallet: walletBalance,
