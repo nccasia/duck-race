@@ -28,7 +28,7 @@ class UserService implements IUserService {
       const userData = checkHash.data as MezonUser;
       const checkUser = await this.prismaService.user.findUnique({
         where: {
-          mezonUserId: userData.id,
+          mezonUserId: String(userData.id),
         },
       });
       if (!checkUser) {
@@ -42,7 +42,7 @@ class UserService implements IUserService {
       }
       const getUserResponse = await this.prismaService.user.findUnique({
         where: {
-          mezonUserId: userData.id,
+          mezonUserId: String(userData.id),
         },
       });
       if (!getUserResponse) {
@@ -148,7 +148,7 @@ class UserService implements IUserService {
       const addUserResponse = await this.prismaService.user.create({
         data: {
           wallet: 0,
-          mezonUserId: user.id,
+          mezonUserId: String(user.id),
           userName: user.username,
           playerName: user?.display_name || user.username,
           avatar: user?.avatar_url

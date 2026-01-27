@@ -1,6 +1,6 @@
 type MezonUser = {
-  id: string;
-  email: string;
+  id: number;
+  email?: string;
   username: string;
   display_name: string;
   mezon_id: string;
