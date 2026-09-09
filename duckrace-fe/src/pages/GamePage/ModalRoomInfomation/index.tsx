@@ -1,9 +1,11 @@
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import RoomInformationTab from "./RoomInfomationTab";
 import RoomMemberTab from "./RoomMemberTab";
 const ModalRoomInfomation = () => {
+  const { t } = useTranslation();
   const [tabs, setTabs] = useState("room-infomation");
   return (
     <Dialog>
@@ -14,15 +16,15 @@ const ModalRoomInfomation = () => {
         </div>
       </DialogTrigger>
       <DialogContent aria-describedby='modal-description' aria-labelledby='modal-title' role='dialog'>
-        <DialogTitle className='text-center text-[20px] hidden'></DialogTitle>
+        <DialogTitle className='text-center text-[20px] hidden'>{t("room.roomInfo")}</DialogTitle>
         <div className='w-[700px] h-[500px] rounded-lg p-10 bg-[url("/Window/SmallWindow.png")] bg-center bg-cover flex items-center justify-center'>
           <Tabs value={tabs} onValueChange={(e) => setTabs(e)} className='w-full h-[400px]'>
             <TabsList className='grid w-full grid-cols-2 h-[50px]'>
               <TabsTrigger className='font-titan h-[40px] uppercase' value='room-infomation'>
-                Room Infomation
+                {t("room.roomInfo")}
               </TabsTrigger>
               <TabsTrigger className='font-titan h-[40px] uppercase' value='room-member'>
-                Room Members
+                {t("room.roomMembers")}
               </TabsTrigger>
             </TabsList>
             <TabsContent

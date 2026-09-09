@@ -1,0 +1,20 @@
+{
+  "name": "duck-race",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "dev:be": "pnpm --filter duck-race-server dev",
+    "dev:fe": "pnpm --filter duck-race-client dev",
+    "dev:debug:be": "pnpm --filter duck-race-server dev:debug",
+    "build:be": "pnpm --filter duck-race-server build",
+    "start:be": "pnpm --filter duck-race-server start",
+    "test:be": "pnpm --filter duck-race-server test",
+    "db:generate": "pnpm --filter duck-race-server db:generate",
+    "db:migrate": "pnpm --filter duck-race-server db:migrate",
+    "db:deploy": "pnpm --filter duck-race-server db:deploy",
+    "db:studio": "pnpm --filter duck-race-server db:studio",
+    "build:fe": "pnpm --filter duck-race-client build",
+    "lint:fe": "pnpm --filter duck-race-client lint",
+    "preview:fe": "pnpm --filter duck-race-client preview"
+  }
+}

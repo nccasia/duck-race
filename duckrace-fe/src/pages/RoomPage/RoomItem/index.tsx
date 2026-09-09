@@ -1,4 +1,5 @@
 import { Room } from "@/interface/room/Room";
+import { useTranslation } from "react-i18next";
 
 interface RoomItemProps {
   index: number;
@@ -6,6 +7,8 @@ interface RoomItemProps {
   onJoinRoom: (roomId: string) => void;
 }
 const RoomItem = ({ index, room, onJoinRoom }: RoomItemProps) => {
+  const { t } = useTranslation();
+
   return (
     <div
       className={`w-[320px] h-[390px] bg-center bg-contain bg-no-repeat`}
@@ -20,7 +23,7 @@ const RoomItem = ({ index, room, onJoinRoom }: RoomItemProps) => {
             onClick={() => onJoinRoom(room.roomId)}
             className='flex  justify-center items-center gap-2 text-[18px] font-titan text-white absolute top-1 left-1/2 transform -translate-x-1/2 '
           >
-            <span>Join</span>
+            <span>{t("common.join")}</span>
           </div>
         </div>
         <img className='w-[180px] h-[130px] ml-2' src='/Rooms/room-5.png' />

@@ -1,7 +1,3 @@
-/node_modules
-/dist
-/logs/*
-.env
-.DS_Store
+
 # Mezon cache
 /mezon-cache

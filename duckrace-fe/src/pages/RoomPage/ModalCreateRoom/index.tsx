@@ -2,19 +2,22 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 import { SocketEvents } from "@/constants/SocketEvents";
 import { AppResponse } from "@/interface/app/AppResponse";
 import { Room } from "@/interface/room/Room";
+import { translateError } from "@/i18n/translateError";
 import { useSocket } from "@/providers/SocketProvider";
 import useRoomStore from "@/stores/roomStore";
 import useUserStore from "@/stores/userStore";
 import { useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 
 const ModalCreateRoom = () => {
+  const { t } = useTranslation();
   const { createRoomData, setCreateRoomData, resetCreateRoomData, openModalCreateRoom, setOpenModalCreateRoom } = useRoomStore();
   const { currentUser } = useUserStore();
   const socket = useSocket();
   const handleChangeValue = (value: string | boolean, field: string) => {
     if (field === "roomBet" && typeof value !== "boolean" && !/^\d*$/.test(value)) {
-      return; // Ngăn không cho nhập ký tự không phải số
+      return;
     }
     const newData = {
       ...createRoomData,
@@ -33,7 +36,7 @@ const ModalCreateRoom = () => {
   const handleCreateNewRoom = () => {
     if (!socket) return;
     if (!createRoomData.roomName || createRoomData.roomBet < 0 || (createRoomData.roomBet <= 0 && createRoomData.isBetting)) {
-      toast.warning("Please fill in all fields");
+      toast.warning(t("room.fillAllFields"));
       return;
     }
     const dataSubmit = {
@@ -54,7 +57,7 @@ const ModalCreateRoom = () => {
       resetCreateRoomData();
     });
     socket.on(SocketEvents.ON.CREATE_ROOM_FAILED, (data: AppResponse<null>) => {
-      toast.error(data.errorMessage);
+      toast.error(translateError(data));
     });
     return () => {
       socket.off(SocketEvents.ON.CREATE_ROOM_SUCCESS);
@@ -74,10 +77,10 @@ const ModalCreateRoom = () => {
         </div>
       </DialogTrigger>
       <DialogContent aria-describedby='modal-description' aria-labelledby='modal-title' role='dialog'>
-        <DialogTitle className='text-center text-[20px] hidden'>Tạo phòng</DialogTitle>
+        <DialogTitle className='text-center text-[20px] hidden'>{t("room.createRoom")}</DialogTitle>
         <div className='w-[370px] h-[500px] rounded-lg p-10 bg-[url("/Rooms/create-room-modal-bg.png")] bg-center bg-cover font-titan flex pt-[120px] items-center flex-col gap-5'>
           <div className='absolute top-6 w-[230px] h-[80px] rounded-lg flex justify-center items-center bg-[url("/Rooms/room-top.png")] bg-no-repeat bg-center bg-cover '>
-            <span className='font-titan text-xl select-none'>Create Room</span>
+            <span className='font-titan text-xl select-none'>{t("room.createRoom")}</span>
           </div>
           <div className='flex flex-col '>
             <div className='w-[220px] h-[70px] relative'>
@@ -87,7 +90,7 @@ const ModalCreateRoom = () => {
                 value={createRoomData.roomName}
                 onChange={(e) => handleChangeValue(e.target.value, "roomName")}
                 className='absolute w-full h-full top-0 left-0 outline-none bg-[transparent] px-4 text-center'
-                placeholder='Room Name'
+                placeholder={t("room.roomName")}
               />
             </div>
             <div
@@ -100,7 +103,7 @@ const ModalCreateRoom = () => {
                   <img className='w-[20px] absolute top-[5px] left-[5px]' src='/Icons/ApproveIcon.png' />
                 )}
               </div>
-              <span>Betting Room</span>
+              <span>{t("room.bettingRoom")}</span>
             </div>
             <div className={`w-[220px] h-[70px] relative mt-2 transition-all ${createRoomData.isBetting ? "" : "opacity-0"}`}>
               <img className='w-full h-full' src='/Rooms/room-input.png' />
@@ -108,7 +111,7 @@ const ModalCreateRoom = () => {
                 value={createRoomData.roomBet}
                 onChange={(e) => handleChangeValue(e.target.value, "roomBet")}
                 className='absolute w-full h-full top-0 left-0 outline-none bg-[transparent] px-4 text-center'
-                placeholder='Room Bet'
+                placeholder={t("room.roomBet")}
               />
             </div>
             <div
@@ -116,7 +119,7 @@ const ModalCreateRoom = () => {
               className='w-[150px] h-[70px] mx-auto mt-3 relative cursor-pointer hover:scale-[0.99] transition-all active:scale-[1.0]'
             >
               <img className='w-full' src='/Buttons/Button.png' />
-              <span className='absolute top-3 left-0 flex items-center justify-center w-full text-[25px] font-titan'>Save</span>
+              <span className='absolute top-3 left-0 flex items-center justify-center w-full text-[25px] font-titan'>{t("common.save")}</span>
             </div>
           </div>
         </div>

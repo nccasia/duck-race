@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { useTranslation } from "react-i18next";
 
 interface WithdrawTabProps {
   depositAmount: number;
@@ -6,16 +7,18 @@ interface WithdrawTabProps {
   onWithdraw: () => void;
 }
 const WithdrawTab = ({ depositAmount, setDepositAmount, onWithdraw }: WithdrawTabProps) => {
+  const { t } = useTranslation();
+
   const handleChangeAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, ""); // Loại bỏ tất cả ký tự không phải số
+    const value = e.target.value.replace(/\D/g, "");
     setDepositAmount(value ? Number(value) : 0);
   };
   return (
     <div className=''>
-      <div className='text-center font-titan text-gray-600 uppercase'>Rút tiền về Mezon</div>
+      <div className='text-center font-titan text-gray-600 uppercase'>{t("wallet.withdrawToMezon")}</div>
       <span></span>
       <div className='flex justify-center items-center mt-5 flex-col gap-2'>
-        <span className='font-titan text-sm text-gray-600'>(Nhập số tiền bạn muốn rút)</span>
+        <span className='font-titan text-sm text-gray-600'>{t("wallet.withdrawAmountHint")}</span>
         <div className='relative'>
           <img src='/Icons/DollarIcon.png' className='w-5 h-7 absolute left-2 top-1/2 -translate-y-1/2 ' alt='' />
           <div className='w-[1px] h-[30px] bg-gray-600 absolute left-[35px] top-1/2 -translate-y-1/2'></div>
@@ -31,7 +34,7 @@ const WithdrawTab = ({ depositAmount, setDepositAmount, onWithdraw }: WithdrawTa
           className='w-[180px] h-[70px] mx-auto mt-3 relative cursor-pointer hover:scale-[0.99] transition-all active:scale-[1.0]'
         >
           <img className='w-full h-full' src='/Buttons/Button.png' />
-          <span className='absolute top-3 left-0 flex items-center justify-center w-full text-[25px] font-titan'>Xác nhận</span>
+          <span className='absolute top-3 left-0 flex items-center justify-center w-full text-[25px] font-titan'>{t("common.confirm")}</span>
         </div>
       </div>
     </div>

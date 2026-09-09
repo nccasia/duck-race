@@ -1,9 +1,10 @@
+import { ErrorCodes } from "./ErrorCodes";
 
 export const ErrorMessages = {
-    INVALID_REQUEST_BODY: "Invalid request body",
-    INVALID_CREDENTIALS: "Invalid credentials",
-    UNAUTHORIZED: "You are not authorized to access this resource",
-    FORBIDDEN: "You don't have permission to access this resource",
-    NOT_FOUND: "The requested resource was not found",
-    INTERNAL_SERVER_ERROR: "An error occurred while processing the request",
+  INVALID_REQUEST_BODY: ErrorCodes.INVALID_REQUEST_BODY,
+  INVALID_CREDENTIALS: ErrorCodes.INVALID_CREDENTIALS,
+  UNAUTHORIZED: ErrorCodes.UNAUTHORIZED,
+  FORBIDDEN: ErrorCodes.FORBIDDEN,
+  NOT_FOUND: ErrorCodes.NOT_FOUND,
+  INTERNAL_SERVER_ERROR: ErrorCodes.INTERNAL_SERVER_ERROR,
 };

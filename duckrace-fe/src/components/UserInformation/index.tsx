@@ -1,11 +1,13 @@
 import useUserStore from "@/stores/userStore";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import DepositToken from "../DepositToken";
 import HistoryTransaction from "../HistoryTransaction";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import WithdrawToken from "../WithdrawToken";
 
 const UserInformation = () => {
+  const { t } = useTranslation();
   const [openModalDeposit, setOpenModalDeposit] = useState(false);
   const [openModalWithdraw, setOpenModalWithdraw] = useState(false);
   const [openModalHistory, setOpenModalHistory] = useState(false);
@@ -31,7 +33,9 @@ const UserInformation = () => {
               className='w-[75px] h-[75px] flex justify-center items-center bg-center bg-cover rounded-md bg-no-repeat'
               style={{ backgroundImage: `url('${currentUser?.avatar ?? "/avatar-default.jpg"}')` }}
             ></div>
-            <p className='font-titan text-white mt-2'>{currentUser?.userName ?? currentUser.playerName ?? "ten.nguoichoi"}</p>
+            <p className='font-titan text-white mt-2'>
+              {currentUser?.userName ?? currentUser.playerName ?? t("common.playerNameFallback")}
+            </p>
             <div className='flex items-center justify-center text-white font-titan gap-2 text-lg mt-1'>
               <img src='/Icons/DollarIcon.png' className='w-5 h-7' alt='' />
               <span>{currentUser.wallet ?? 0}</span>
@@ -43,21 +47,21 @@ const UserInformation = () => {
               className='w-full font-titan text-gray-600 bg-[#d9d9d9b8] active:bg-[#d9d9d9b8] hover:bg-[#d9d9d9] transition-all p-2 rounded-md flex items-center gap-2 outline-none'
             >
               <img className='w-[30px] h-[30px]' src='/deposit.png' />
-              <span>Nạp tiền</span>
+              <span>{t("wallet.deposit")}</span>
             </button>
             <button
               onClick={() => setOpenModalWithdraw(true)}
               className='w-full font-titan text-gray-600 bg-[#d9d9d9b8] active:bg-[#d9d9d9b8] hover:bg-[#d9d9d9] transition-all p-2 rounded-md flex items-center gap-2 outline-none'
             >
               <img className='w-[30px] h-[30px]' src='/withdraw.png' />
-              <span>Rút tiền</span>
+              <span>{t("wallet.withdraw")}</span>
             </button>
             <button
               onClick={() => setOpenModalHistory(true)}
               className='w-full font-titan text-gray-600 bg-[#d9d9d9b8] active:bg-[#d9d9d9b8] hover:bg-[#d9d9d9] transition-all p-2 rounded-md flex items-center gap-2 outline-none'
             >
               <img className='w-[30px] h-[30px]' src='/history.png' />
-              <span>Lịch sử giao dịch</span>
+              <span>{t("wallet.history")}</span>
             </button>
           </div>
         </PopoverContent>

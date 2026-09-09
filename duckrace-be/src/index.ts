@@ -1,3 +1,4 @@
+import "./configs/env";
 import "module-alias/register";
 import Application from "./app";
 import container from "./container";

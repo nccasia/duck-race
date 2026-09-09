@@ -1,5 +1,4 @@
 import { asClass, createContainer, InjectionMode } from "awilix";
-import "dotenv/config";
 import Application from "./app";
 import { GameService, MezonClientService, UserService } from "./services";
 import JwtService from "./services/auth/JWTService";
@@ -13,7 +12,6 @@ const container = createContainer({
 
 // Register the services
 container.register({
-  // Register the Services
   UserService: asClass(UserService).scoped(),
   TransactionService: asClass(TransactionService).scoped(),
   RoomService: asClass(RoomService).singleton(),

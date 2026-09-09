@@ -1,6 +1,5 @@
-import { ErrorMessages } from "@/constants/ErrorMessages";
+import { ErrorCodes } from "@/constants/ErrorCodes";
 import { IJWTService } from "@/interfaces/IJWTService";
-import "dotenv/config";
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
@@ -25,12 +24,13 @@ function AuthenticateMiddleware(JwtService: IJWTService): RequestHandler {
       return res.status(StatusCodes.UNAUTHORIZED).json({
         status: StatusCodes.UNAUTHORIZED,
         error: {
-          message: "Unauthorized",
-          errorDetail: "Unauthorized",
+          message: ErrorCodes.UNAUTHORIZED,
+          errorDetail: ErrorCodes.UNAUTHORIZED,
         },
         success: false,
         data: null,
-        ErrorMessages: ErrorMessages.UNAUTHORIZED,
+        errorCode: ErrorCodes.UNAUTHORIZED,
+        errorMessage: ErrorCodes.UNAUTHORIZED,
       });
     }
     // Decode the token to get the payload
@@ -42,12 +42,13 @@ function AuthenticateMiddleware(JwtService: IJWTService): RequestHandler {
       return res.status(StatusCodes.UNAUTHORIZED).json({
         status: StatusCodes.UNAUTHORIZED,
         error: {
-          message: "Unauthorized",
-          errorDetail: "Unauthorized",
+          message: ErrorCodes.UNAUTHORIZED,
+          errorDetail: ErrorCodes.UNAUTHORIZED,
         },
         success: false,
         data: null,
-        ErrorMessages: ErrorMessages.UNAUTHORIZED,
+        errorCode: ErrorCodes.UNAUTHORIZED,
+        errorMessage: ErrorCodes.UNAUTHORIZED,
       });
     }
     req.user = {

@@ -4,11 +4,13 @@ import { SocketEvents } from "@/constants/SocketEvents";
 import { useSocket } from "@/providers/SocketProvider";
 import useGameStore from "@/stores/gameStore";
 import useRoomStore from "@/stores/roomStore";
+import { useTranslation } from "react-i18next";
 import AddUserTab from "./AddUserTab";
 import ListUserTab from "./ListUserTab";
 import MezonUserTab from "./MezonUserTab";
 
 const ModalUser = () => {
+  const { t } = useTranslation();
   const { gameStatus } = useGameStore();
   const { listMezonUser, setOpenModalShowUser, openModalShowUser, currentRoom, tabs, setTabs } = useRoomStore();
   const socket = useSocket();
@@ -51,18 +53,18 @@ const ModalUser = () => {
         </div>
       </DialogTrigger>
       <DialogContent aria-describedby='modal-description' aria-labelledby='modal-title' role='dialog'>
-        <DialogTitle className='text-center text-[20px] hidden'>Tạo phòng</DialogTitle>
+        <DialogTitle className='text-center text-[20px] hidden'>{t("game.listDucks")}</DialogTitle>
         <div className='w-[700px] h-[500px] rounded-lg p-10 bg-[url("/Window/SmallWindow.png")] bg-center bg-cover flex items-center justify-center'>
           <Tabs value={tabs} onValueChange={(e) => setTabs(e)} className='w-full h-[400px]'>
             <TabsList className='grid w-full grid-cols-3 h-[50px]'>
               <TabsTrigger className='font-titan h-[40px]' value='list-user'>
-                List Ducks
+                {t("game.listDucks")}
               </TabsTrigger>
               <TabsTrigger className='font-titan h-[40px]' value='add-user'>
-                Add Ducks
+                {t("game.addDucks")}
               </TabsTrigger>
               <TabsTrigger className='font-titan h-[40px]' value='mezon-user'>
-                Mezon Ducks
+                {t("game.mezonDucks")}
               </TabsTrigger>
             </TabsList>
             <TabsContent

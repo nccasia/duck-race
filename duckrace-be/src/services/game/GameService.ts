@@ -1,3 +1,4 @@
+import {ErrorCodes} from "@/constants/ErrorCodes";
 import {BettorOfDucks, Game} from "@/entities/Game";
 import logger from "@/helpers/logger";
 import {IGameService} from "@/interfaces/IGameService";
@@ -28,7 +29,8 @@ class GameService implements IGameService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Room is not found",
+                    errorCode: ErrorCodes.ROOM_NOT_FOUND,
+                    errorMessage: ErrorCodes.ROOM_NOT_FOUND,
                 };
             }
 
@@ -54,7 +56,8 @@ class GameService implements IGameService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server",
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }
@@ -66,7 +69,8 @@ class GameService implements IGameService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Game is not found",
+                    errorCode: ErrorCodes.GAME_NOT_FOUND,
+                    errorMessage: ErrorCodes.GAME_NOT_FOUND,
                 };
             }
             return {
@@ -79,7 +83,8 @@ class GameService implements IGameService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server",
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }
@@ -90,7 +95,8 @@ class GameService implements IGameService {
                 return {
                     statusCode: 400,
                     isSuccess: false,
-                    errorMessage: "Please fill in all fields",
+                    errorCode: ErrorCodes.FILL_ALL_FIELDS,
+                    errorMessage: ErrorCodes.FILL_ALL_FIELDS,
                 };
             }
             const game = this.listGame.find((game) => game.id === betData.gameId);
@@ -98,7 +104,8 @@ class GameService implements IGameService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Game is not found",
+                    errorCode: ErrorCodes.GAME_NOT_FOUND,
+                    errorMessage: ErrorCodes.GAME_NOT_FOUND,
                 };
             }
             const userInfo = await this._userService.getUserById(betData.userId);
@@ -106,14 +113,16 @@ class GameService implements IGameService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "User is not found",
+                    errorCode: ErrorCodes.USER_NOT_FOUND,
+                    errorMessage: ErrorCodes.USER_NOT_FOUND,
                 };
             }
             if (userInfo.data.wallet < betData.betAmount * betData.ducks.length) {
                 return {
                     statusCode: 400,
                     isSuccess: false,
-                    errorMessage: "Not enough token",
+                    errorCode: ErrorCodes.NOT_ENOUGH_TOKEN,
+                    errorMessage: ErrorCodes.NOT_ENOUGH_TOKEN,
                 };
             }
             betData.ducks.forEach((duckId) => {
@@ -151,7 +160,8 @@ class GameService implements IGameService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server" + error?.message,
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }
@@ -162,7 +172,8 @@ class GameService implements IGameService {
                 return {
                     statusCode: 400,
                     isSuccess: false,
-                    errorMessage: "Please fill in all fields",
+                    errorCode: ErrorCodes.FILL_ALL_FIELDS,
+                    errorMessage: ErrorCodes.FILL_ALL_FIELDS,
                 };
             }
             const game = this.listGame.find((game) => game.id === confirmBetData.gameId);
@@ -170,7 +181,8 @@ class GameService implements IGameService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Game is not found",
+                    errorCode: ErrorCodes.GAME_NOT_FOUND,
+                    errorMessage: ErrorCodes.GAME_NOT_FOUND,
                 };
             }
             game.gameBettors.forEach((bettor) => {
@@ -183,7 +195,8 @@ class GameService implements IGameService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server",
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }
@@ -194,7 +207,8 @@ class GameService implements IGameService {
                 return {
                     statusCode: 400,
                     isSuccess: false,
-                    errorMessage: "Please fill in all fields",
+                    errorCode: ErrorCodes.FILL_ALL_FIELDS,
+                    errorMessage: ErrorCodes.FILL_ALL_FIELDS,
                 };
             }
             const game = this.listGame.find((game) => game.id === gameId);
@@ -202,7 +216,8 @@ class GameService implements IGameService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Game is not found",
+                    errorCode: ErrorCodes.GAME_NOT_FOUND,
+                    errorMessage: ErrorCodes.GAME_NOT_FOUND,
                 };
             }
             const listUserResponse = this._userService.getListUsers();
@@ -233,7 +248,8 @@ class GameService implements IGameService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server" + error?.message,
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }
@@ -244,7 +260,8 @@ class GameService implements IGameService {
                 return {
                     statusCode: 200,
                     isSuccess: true,
-                    errorMessage: "No one wins",
+                    errorCode: ErrorCodes.NO_ONE_WINS,
+                    errorMessage: ErrorCodes.NO_ONE_WINS,
                 };
             }
             const result = await Promise.all(
@@ -278,7 +295,8 @@ class GameService implements IGameService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: " rewardBetForDuck error",
+                errorCode: ErrorCodes.REWARD_BET_ERROR,
+                errorMessage: ErrorCodes.REWARD_BET_ERROR,
             };
         }
     }
@@ -289,7 +307,8 @@ class GameService implements IGameService {
                 return {
                     statusCode: 400,
                     isSuccess: false,
-                    errorMessage: "Please fill in all fields",
+                    errorCode: ErrorCodes.FILL_ALL_FIELDS,
+                    errorMessage: ErrorCodes.FILL_ALL_FIELDS,
                 };
             }
             const game = this.listGame.find((game) => game.id === gameId);
@@ -297,7 +316,8 @@ class GameService implements IGameService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Game is not found",
+                    errorCode: ErrorCodes.GAME_NOT_FOUND,
+                    errorMessage: ErrorCodes.GAME_NOT_FOUND,
                 };
             }
             game.gameStatus = "completed";
@@ -331,7 +351,8 @@ class GameService implements IGameService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server" + error?.message,
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }

@@ -1,3 +1,4 @@
+import { ErrorCodes, TransactionNotes } from "@/constants/ErrorCodes";
 import { IMezonClientService } from "@/interfaces/IMezonClientService";
 import { MezonClient, TokenSentEvent } from "mezon-sdk";
 
@@ -39,7 +40,7 @@ class MezonClientService implements IMezonClientService {
           sender_name: "DUCKRACE-BOT",
           receiver_id: winners[i],
           amount: Math.floor(winBet),
-          note: "You win the game",
+          note: TransactionNotes.WIN_GAME,
         };
         await this.client.sendToken(sendTokenData);
       }
@@ -53,7 +54,8 @@ class MezonClientService implements IMezonClientService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "rewardBetForDuck error",
+        errorCode: ErrorCodes.REWARD_BET_ERROR,
+        errorMessage: ErrorCodes.REWARD_BET_ERROR,
       };
     }
   }

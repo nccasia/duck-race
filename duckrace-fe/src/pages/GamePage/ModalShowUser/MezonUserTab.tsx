@@ -2,11 +2,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import useRoomStore from "@/stores/roomStore";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface IMezonUserTabProps {
   handleSaveListUser: () => void;
 }
 const MezonUserTab = ({ handleSaveListUser }: IMezonUserTabProps) => {
+  const { t } = useTranslation();
   const {
     mezonClanRoles,
     selectedClanRole,
@@ -72,11 +74,11 @@ const MezonUserTab = ({ handleSaveListUser }: IMezonUserTabProps) => {
               }
             >
               <SelectTrigger className='w-[200px] bg-white text-gray-700 outline-none focus:outline-none'>
-                <SelectValue className='text-gray-700 outline-none' placeholder='Select roles' />
+                <SelectValue className='text-gray-700 outline-none' placeholder={t("common.selectRoles")} />
               </SelectTrigger>
               <SelectContent className='bg-white w-[200px]'>
                 <SelectGroup>
-                  <SelectLabel>Roles</SelectLabel>
+                  <SelectLabel>{t("common.roles")}</SelectLabel>
                   {mezonClanRoles?.map((role) => (
                     <SelectItem key={role.id} value={role.id}>
                       {role.title}
@@ -92,7 +94,7 @@ const MezonUserTab = ({ handleSaveListUser }: IMezonUserTabProps) => {
           className='w-[100px] h-[40px] relative cursor-pointer hover:scale-[0.99] transition-all active:scale-[1.0]'
         >
           <img className='w-full h-[40px]' src='/Buttons/Button.png' />
-          <span className='absolute top-1 left-0 flex items-center justify-center w-full text-[20px] font-titan'>Save</span>
+          <span className='absolute top-1 left-0 flex items-center justify-center w-full text-[20px] font-titan'>{t("common.save")}</span>
         </div>
       </div>
       <div className='flex-1 w-full h-[calc(100%-50px)] outline-none p-2 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-red-500 [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-track]:bg-gray-200 bg-[#fdfdfd54] rounded-lg select-none'>

@@ -8,8 +8,10 @@ import { IDuck } from "@/interface/room/Room";
 import useGameStore from "@/stores/gameStore";
 import useRoomStore from "@/stores/roomStore";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const ModalShowRank = () => {
+  const { t } = useTranslation();
   const { gameStatus } = useGameStore();
   const { listDucks, openModalShowRank, setOpenModalShowRank } = useRoomStore();
   const [listPlayerAfterSort, setListPlayerAfterSort] = useState<IDuck[]>([]);
@@ -45,11 +47,11 @@ const ModalShowRank = () => {
         role="dialog"
       >
         <DialogTitle className="text-center text-[20px] hidden">
-          Tạo phòng
+          {t("common.rank")}
         </DialogTitle>
         <div className='w-[350px] h-[600px] rounded-lg py-10 px-5 bg-[url("/Window/MenuWindow.png")] bg-center bg-cover '>
           <div className="flex justify-center items-center h-[50px] text-[30px] text-gray-600 font-titan">
-            Rank
+            {t("common.rank")}
           </div>
           <div className="h-[450px] overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-red-500 [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-track]:bg-gray-200">
             {listPlayerAfterSort.map((player, index) => (

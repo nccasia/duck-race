@@ -1,11 +1,13 @@
 import { SocketEvents } from "@/constants/SocketEvents";
 import { useSocket } from "@/providers/SocketProvider";
 import useRoomStore from "@/stores/roomStore";
+import { useTranslation } from "react-i18next";
 
 interface IListUserTabProps {
   handleChangeTab: (tab: string) => void;
 }
 const ListUserTab = ({ handleChangeTab }: IListUserTabProps) => {
+  const { t } = useTranslation();
   const { listDucks, currentRoom } = useRoomStore();
   const socket = useSocket();
   const handleRemoveUser = (id: string) => {
@@ -35,13 +37,13 @@ const ListUserTab = ({ handleChangeTab }: IListUserTabProps) => {
         ))
       ) : (
         <div className='text-center flex flex-col items-center h-[200px] justify-center'>
-          <span className='font-titan text-lg text-red-500'>You have not added any players yet!</span>
+          <span className='font-titan text-lg text-red-500'>{t("game.noPlayersAdded")}</span>
           <div
             onClick={() => handleChangeTab("add-user")}
             className='w-[150px] h-[70px] mx-auto mt-3 relative cursor-pointer hover:scale-[0.99] transition-all active:scale-[1.0]'
           >
             <img className='w-full' src='/Buttons/Button.png' />
-            <span className='absolute top-3 left-0 flex items-center justify-center w-full text-[25px] font-titan'>Thêm</span>
+            <span className='absolute top-3 left-0 flex items-center justify-center w-full text-[25px] font-titan'>{t("common.add")}</span>
           </div>
         </div>
       )}

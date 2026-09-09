@@ -2,8 +2,8 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 import { SocketEvents } from "@/constants/SocketEvents";
 import { useSocket } from "@/providers/SocketProvider";
 import useGameStore from "@/stores/gameStore";
-import { useEffect, useState } from "react";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface TimeInput {
   position1: number;
@@ -13,6 +13,7 @@ interface TimeInput {
 }
 
 const ModalSearchRoom = () => {
+  const { t } = useTranslation();
   const [openModalSearchRoom, setOpenModalSearchRoom] = useState(false);
   const { currentGame, gameStatus } = useGameStore();
   const socket = useSocket();
@@ -24,37 +25,24 @@ const ModalSearchRoom = () => {
     position4: 0,
   });
 
-  // Tạo ref cho các ô input
   const inputRefs = useRef<HTMLInputElement[]>([]);
 
   useEffect(() => {
     // if (currentGame) {
-    //   const time = currentGame.expiredTime; // Ví dụ: 300s
-    //   const minutes = Math.floor(time / 60); // 5 phút
-    //   const seconds = time % 60; // 0 giây
-    //   // Định dạng MM:SS
-    //   const formattedTime = `${String(minutes).padStart(2, "0")}${String(seconds).padStart(2, "0")}`; // "0500"
-    //   // Gán giá trị cho từng vị trí
-    //   setTimeInput({
-    //     position1: parseInt(formattedTime[0]), // 0
-    //     position2: parseInt(formattedTime[1]), // 5
-    //     position3: parseInt(formattedTime[2]), // 0
-    //     position4: parseInt(formattedTime[3]), // 0
-    //   });
+    //   const time = currentGame.expiredTime;
+    //   ...
     // }
   }, [currentGame]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, position: number) => {
     const value = e.key;
 
-    // Chỉ chấp nhận các ký tự số từ 0-9
     if (/^\d$/.test(value)) {
       setTimeInput((prev) => ({
         ...prev,
         [`position${position}`]: parseInt(value),
       }));
 
-      // Tự động chuyển focus sang ô tiếp theo
       const nextInput = inputRefs.current[position];
       if (nextInput) {
         nextInput.focus();
@@ -63,9 +51,9 @@ const ModalSearchRoom = () => {
   };
 
   const convertTimeInputToSeconds = (timeInput: TimeInput) => {
-    const minutes = timeInput.position1 * 10 + timeInput.position2; // Số phút
-    const seconds = timeInput.position3 * 10 + timeInput.position4; // Số giây
-    return minutes * 60 + seconds; // Tổng số giây
+    const minutes = timeInput.position1 * 10 + timeInput.position2;
+    const seconds = timeInput.position3 * 10 + timeInput.position4;
+    return minutes * 60 + seconds;
   };
 
   const handleSaveTime = () => {
@@ -97,14 +85,14 @@ const ModalSearchRoom = () => {
         </div>
       </DialogTrigger>
       <DialogContent aria-describedby='modal-description' aria-labelledby='modal-title' role='dialog'>
-        <DialogTitle className='text-center text-[20px] hidden'>Tạo phòng</DialogTitle>
+        <DialogTitle className='text-center text-[20px] hidden'>{t("common.time")}</DialogTitle>
         <div className='w-[350px] h-[350px] rounded-lg p-10 bg-[url("/countdown.png")] bg-center bg-cover font-titan flex justify-center items-center flex-col gap-5'>
-          <div className='text-center text-[30px]'>TIME</div>
+          <div className='text-center text-[30px]'>{t("common.time")}</div>
           <div className='flex items-center justify-center gap-5 relative'>
             {[1, 2, 3, 4].map((position, index) => (
               <input
                 key={position}
-                ref={(el) => (inputRefs.current[index] = el!)} // Gán ref cho từng input
+                ref={(el) => (inputRefs.current[index] = el!)}
                 maxLength={1}
                 onKeyDown={(e) => handleKeyDown(e, position)}
                 value={timeInput[`position${position}` as keyof TimeInput]}
@@ -123,7 +111,7 @@ const ModalSearchRoom = () => {
                 onClick={handleSaveTime}
                 className='flex justify-center items-center gap-2 text-[30px] font-titan text-white absolute top-1 left-1/2 transform -translate-x-1/2'
               >
-                <span>Save</span>
+                <span>{t("common.save")}</span>
               </div>
             </div>
           </div>

@@ -1,18 +1,21 @@
 import { SocketEvents } from "@/constants/SocketEvents";
 import { AppResponse } from "@/interface/app/AppResponse";
 import { Room } from "@/interface/room/Room";
+import { translateError } from "@/i18n/translateError";
 import { useSocket } from "@/providers/SocketProvider";
 import { ROUTES } from "@/routes/path";
 import useRoomStore from "@/stores/roomStore";
 import useUserStore from "@/stores/userStore";
 import { MezonWebViewEvent } from "@/types/webview";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import ModalCreateRoom from "./ModalCreateRoom";
 import RoomItem from "./RoomItem";
 
 const RoomPage = () => {
+  const { t } = useTranslation();
   const socket = useSocket();
   const navigate = useNavigate();
   const { setListRoom, listRoom, setOpenModalCreateRoom } = useRoomStore();
@@ -42,7 +45,7 @@ const RoomPage = () => {
       navigate(`${ROUTES.ROOM_DETAIL.replace(":roomId", (data.data as Room).roomId)}?gameId=${(data.data as Room).currentGame}`);
     });
     socket.on(SocketEvents.ON.JOIN_ROOM_FAILED, (data: AppResponse<Room>) => {
-      toast.warning(data.errorMessage);
+      toast.warning(translateError(data));
     });
     return () => {
       socket.off(SocketEvents.ON.GET_LIST_ROOMS_SUCCESS);
@@ -63,7 +66,7 @@ const RoomPage = () => {
           <img className='w-[30px] absolute top-[12px] left-[12px]' src='/Icons/ExitIcon.png' />
         </div>
         <div className='w-[200px] h-[80px] rounded-lg flex justify-center items-center bg-[url("/Rooms/room-top.png")] bg-no-repeat bg-center bg-cover '>
-          <span className='font-titan text-2xl select-none'>Rooms</span>
+          <span className='font-titan text-2xl select-none'>{t("room.title")}</span>
         </div>
         <ModalCreateRoom />
         {/* <ModalSearchRoom /> */}
@@ -80,15 +83,15 @@ const RoomPage = () => {
         ) : (
           <div className='flex justify-center items-center h-full'>
             <div className='flex flex-col items-center gap-2 font-titan text-gray-600'>
-              <span className='text-2xl '>Wellcome to duckrace game!</span>
-              <span>No rooms have been created yet.</span>
+              <span className='text-2xl '>{t("room.welcome")}</span>
+              <span>{t("room.noRooms")}</span>
               <div
                 onClick={() => setOpenModalCreateRoom(true)}
                 className='w-[220px] h-[60px] relative mt-5 cursor-pointer filter hover:drop-shadow-[0_0_0.1rem_rgba(124,6,226,0.874)] transition-all active:drop-shadow-[0_0_0.2rem_rgba(124,6,226,0.874)]'
               >
                 <img className='w-full h-full' src='/Buttons/Button.png' />
                 <span className='absolute flex h-full w-full justify-center items-center top-0 left-0 text-[18px] '>
-                  Create Room Now
+                  {t("room.createRoomNow")}
                 </span>
               </div>
             </div>

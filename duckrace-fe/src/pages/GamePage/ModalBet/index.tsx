@@ -7,12 +7,14 @@ import useGameStore from "@/stores/gameStore";
 import useRoomStore from "@/stores/roomStore";
 import useUserStore from "@/stores/userStore";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface ModalBetProps {
   isPopoverOpen: boolean;
   setIsPopoverOpen: (isOpen: boolean) => void;
 }
 const ModalBet = ({ isPopoverOpen, setIsPopoverOpen }: ModalBetProps) => {
+  const { t } = useTranslation();
   const [timeCountDown, setTimeCountDown] = useState<number | null>(30);
   const [isActive, setIsActive] = useState(false);
   const listDuckPickedRef = useRef<DuckPicked[]>([]);
@@ -92,6 +94,14 @@ const ModalBet = ({ isPopoverOpen, setIsPopoverOpen }: ModalBetProps) => {
       if (interval) clearTimeout(interval);
     };
   }, [isActive, timeCountDown]);
+
+  const modalTitle =
+    gameStatus === "racing"
+      ? t("game.bettorsOfGame")
+      : gameStatus === "betting"
+        ? t("game.matchStartsIn")
+        : t("game.listDucksCanBet");
+
   return (
     <Dialog open={openModalBet} onOpenChange={handleOpenModalBet}>
       <DialogTrigger asChild>
@@ -104,15 +114,9 @@ const ModalBet = ({ isPopoverOpen, setIsPopoverOpen }: ModalBetProps) => {
         </div>
       </DialogTrigger>
       <DialogContent aria-describedby='modal-description' aria-labelledby='modal-title' role='dialog'>
-        <DialogTitle className='text-center text-[20px] hidden'>Tạo phòng</DialogTitle>
+        <DialogTitle className='text-center text-[20px] hidden'>{t("game.listDucksCanBet")}</DialogTitle>
         <div className='w-[620px] h-[600px] rounded-lg p-10 pt-5 bg-[url("/Window/MediumWindow.png")] bg-center bg-cover font-titan flex  items-center flex-col gap-2'>
-          <div className='text-center text-[30px]'>
-            {gameStatus === "racing"
-              ? "BETTORS OF GAME"
-              : gameStatus === "betting"
-              ? "THE MATCH WILL START IN 30s"
-              : "LIST DUCKS YOU CAN BET"}
-          </div>
+          <div className='text-center text-[30px]'>{modalTitle}</div>
           {gameStatus === "betting" && (
             <div className='w-[150px] h-[55px] justify-center items-center relative '>
               <img className='w-full h-full' src='/Buttons/Button-hover.png' />
@@ -129,7 +133,7 @@ const ModalBet = ({ isPopoverOpen, setIsPopoverOpen }: ModalBetProps) => {
               </div>
             </div>
           )}
-          <div className='text-center text-[25px]'>Pick your duck if you want to bet</div>
+          <div className='text-center text-[25px]'>{t("game.pickDuckToBet")}</div>
           <div className='w-full h-[380px] bg-[#9f9e9e26] rounded-xl overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-red-500 [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-track]:bg-gray-200'>
             <div className='grid grid-cols-4 gap-2 p-2'>
               {listBettorOfDucks.map((duck, index) => {
@@ -159,15 +163,12 @@ const ModalBet = ({ isPopoverOpen, setIsPopoverOpen }: ModalBetProps) => {
                     <PopoverContent className='w-80 h-80 bg-[#bab29bd9] p-2'>
                       <div className='h-full w-full  '>
                         <div className='text-white text-center font-titan border-b-2 pb-1 border-gray-300 h-[55px]'>
-                          <span className=''>Duck {duck.order}</span>
+                          <span className=''>{t("game.duckOrder", { order: duck.order })}</span>
                           <p>
                             - <span className='px-2'> {duck.name} </span> -
                           </p>
                         </div>
                         <div className='h-[calc(100%-110px)] overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-red-500 [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-track]:bg-gray-200'>
-                          {/* <div className='h-full flex justify-center items-center'>
-                            <span className='font-titan text-white'>No one has bet on this duck yet.</span>
-                          </div> */}
                           {duck.bettors && duck.bettors.length > 0 ? (
                             <div className='p-1 '>
                               {duck.bettors?.map((bettor) => (
@@ -185,7 +186,7 @@ const ModalBet = ({ isPopoverOpen, setIsPopoverOpen }: ModalBetProps) => {
                             </div>
                           ) : (
                             <div className='h-full flex justify-center items-center'>
-                              <span className='font-titan text-white'>No one has bet on this duck yet.</span>
+                              <span className='font-titan text-white'>{t("game.noBetsYet")}</span>
                             </div>
                           )}
                         </div>
@@ -204,7 +205,7 @@ const ModalBet = ({ isPopoverOpen, setIsPopoverOpen }: ModalBetProps) => {
                               }
                             />
                             <div className='flex w-full justify-center items-center gap-2 text-[18px] font-titan text-white absolute top-1 left-1/2 transform -translate-x-1/2 '>
-                              <span>{checkIsPicked ? "Un Pick" : "Pick"}</span>
+                              <span>{checkIsPicked ? t("common.unpick") : t("common.pick")}</span>
                             </div>
                           </button>
                         </div>
@@ -228,22 +229,19 @@ const ModalBet = ({ isPopoverOpen, setIsPopoverOpen }: ModalBetProps) => {
                     src={gameStatus === "betting" && !isConfirmedBet ? "/Buttons/Button.png" : "/Buttons/Button-disabled.png"}
                   />
                   <div className='flex w-full justify-center items-center gap-2 text-[16px] font-titan text-white absolute top-2 left-1/2 transform -translate-x-1/2 '>
-                    <span className='inline-block w-full'>Confirm Bet</span>
+                    <span className='inline-block w-full'>{t("common.confirmBet")}</span>
                   </div>
                 </button>
               </PopoverTrigger>
               <PopoverContent className='w-64 h-72 bg-[#7aab83] p-2'>
                 <div className='font-titan flex items-center justify-center text-white text-xl h-[40px] border-b-2 '>
-                  Confirm Bet
+                  {t("common.confirmBet")}
                 </div>
                 <div className='flex text-white flex-col gap-2 items-center justify-center text-center font-titan h-[160px]'>
                   <span>
-                    You bet on ducks <br /> {listDuckPicked.map((duck) => duck.duckOrder).join(", ")}
+                    {t("game.youBetOnDucks")} <br /> {listDuckPicked.map((duck) => duck.duckOrder).join(", ")}
                   </span>
-                  {/* <span>Do you confirm?</span> */}
-                  <span>
-                    You have 30 second <br /> to confirm in Mezon
-                  </span>
+                  <span>{t("game.confirmInMezon")}</span>
                 </div>
                 <div className='flex justify-center items-center gap-2 h-[80px]'>
                   <div

@@ -2,8 +2,8 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { defineConfig } from "vite";
 
-// https://vite.dev/config/
 export default defineConfig({
+  envDir: path.resolve(__dirname, ".."),
   plugins: [react()],
   resolve: {
     alias: {
@@ -13,5 +13,6 @@ export default defineConfig({
   server: {
     host: true,
     cors: true,
+    allowedHosts: [".nccsoft.test", "localhost"],
   },
 });

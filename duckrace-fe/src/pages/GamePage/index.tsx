@@ -17,6 +17,7 @@ import useRoomStore from "@/stores/roomStore";
 import useUserStore from "@/stores/userStore";
 import {MezonAppEvent, MezonWebViewEvent} from "@/types/webview";
 import {useEffect, useRef, useState} from "react";
+import {useTranslation} from "react-i18next";
 import {useLocation, useNavigate, useParams} from "react-router-dom";
 import {toast} from "react-toastify";
 import CountdownTime from "./components/CountdownTime";
@@ -31,6 +32,7 @@ import ModalUser from "./ModalShowUser";
 type RaceDuck = Omit<IDuck, "score"> & { score: number[] };
 
 const GamePage = () => {
+    const { t } = useTranslation();
     const socket = useSocket();
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
@@ -200,7 +202,7 @@ const GamePage = () => {
 
     useEffect(() => {
         if (!socket || !gameId) return;
-        socket.on(SocketEvents.ON.LEFT_ROOM_SUCCESS, (data) => {
+        socket.on(SocketEvents.ON.LEFT_ROOM_SUCCESS, (data: AppResponse<Room>) => {
             setCurrentGame(null);
             setListDucks([]);
             setTotalDucks(0);
@@ -380,7 +382,7 @@ const GamePage = () => {
             SocketEvents.ON.BET_FOR_DUCK_SUCCESS,
             (data: AppResponse<BetForDuckResponse>) => {
                 setIsOpenPopoverConfirmBet(false);
-                toast.success("You have bet for duck successfully");
+                toast.success(t("game.betSuccess"));
                 if (currentUser.wallet && data.data?.betAmount) {
                     changeWallet(currentUser.wallet - data.data?.betAmount);
                 }
@@ -540,15 +542,15 @@ const GamePage = () => {
     const handleStartGame = () => {
         if (!socket) return;
         if (gameStatus !== "waiting") {
-            toast.warning("Game is racing, please wait for the next game");
+            toast.warning(t("game.gameRacingWait"));
             return;
         }
         if (currentRoom?.ownerId !== currentUser.id) {
-            toast.warning("You are not the owner of this room");
+            toast.warning(t("game.notRoomOwner"));
             return;
         }
-        if (listDucks.length < 6) {
-            toast.warning("You need at least 6 ducks to start the game");
+        if (listDucks.length < 5) {
+            toast.warning(t("game.minDucksRequired"));
             return;
         }
         socket.emit(SocketEvents.EMIT.START_BET, {
@@ -561,11 +563,11 @@ const GamePage = () => {
     const handleResetGame = () => {
         if (!socket) return;
         if (gameStatus === "racing") {
-            toast.warning("Game is racing, you can't reset game");
+            toast.warning(t("game.gameRacingNoReset"));
             return;
         }
         if (currentRoom?.ownerId !== currentUser.id) {
-            toast.warning("You are not the owner of this room");
+            toast.warning(t("game.notRoomOwner"));
             return;
         }
         socket.emit(SocketEvents.EMIT.CREATE_NEW_GAME, {
@@ -627,7 +629,7 @@ const GamePage = () => {
                             <div
                                 className="flex  justify-center items-center gap-2 text-[30px] font-titan text-white absolute top-1 left-1/2 transform -translate-x-1/2 ">
                                 <img className="w-[20px] " src="/Icons/RefreshIcon.png"/>
-                                <span>Reset</span>
+                                <span>{t("common.reset")}</span>
                             </div>
                         </button>
                     ) : (
@@ -648,7 +650,7 @@ const GamePage = () => {
                             <div
                                 className="flex  justify-center items-center gap-2 text-[30px] font-titan text-white absolute top-1 left-1/2 transform -translate-x-1/2 ">
                                 <img className="w-[20px] " src="/Icons/PlayIcon.png"/>
-                                <span>Start</span>
+                                <span>{t("common.start")}</span>
                             </div>
                         </button>
                     )}

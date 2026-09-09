@@ -1,6 +1,8 @@
+import { translateError } from "@/i18n/translateError";
 import transactionService from "@/services/transactionServices";
 import useUserStore from "@/stores/userStore";
 import { memo, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
@@ -12,6 +14,7 @@ interface WithdrawTokenProps {
   setOpenModalWithdraw: (value: boolean) => void;
 }
 const WithdrawToken = ({ openModalWithdraw, setOpenModalWithdraw }: WithdrawTokenProps) => {
+  const { t } = useTranslation();
   const { changeWallet, currentUser } = useUserStore();
   const depositAmountRef = useRef<number>(0);
   const [depositAmount, setDepositAmount] = useState<number>(0);
@@ -22,11 +25,11 @@ const WithdrawToken = ({ openModalWithdraw, setOpenModalWithdraw }: WithdrawToke
     try {
       const amount = depositAmount;
       if (amount <= 0) {
-        toast.error("Số tiền phải lớn hơn 0");
+        toast.error(t("wallet.withdrawAmountPositive"));
         return;
       }
       if (currentUser.wallet && amount > currentUser?.wallet) {
-        toast.error("Số tiền rút không được lớn hơn số dư trong tài khoản");
+        toast.error(t("wallet.withdrawExceedsBalance"));
         return;
       }
       const response = await transactionService.withdrawToken({
@@ -34,16 +37,16 @@ const WithdrawToken = ({ openModalWithdraw, setOpenModalWithdraw }: WithdrawToke
       });
       console.log("response", response);
       if (response.isSuccess) {
-        toast.success("Rút tiền thành công");
+        toast.success(t("wallet.withdrawSuccess"));
         setDepositAmount(0);
         changeWallet(response.data?.currentWallet ?? 0);
         setOpenModalWithdraw(false);
       } else {
-        toast.error(response.errorMessage);
+        toast.error(translateError(response));
       }
     } catch (error) {
       console.log("Error in handleWithdraw", error);
-      toast.error((error as { message: string })?.message);
+      toast.error(t("errors.INTERNAL_SERVER_ERROR"));
     }
   };
   return (
@@ -51,16 +54,16 @@ const WithdrawToken = ({ openModalWithdraw, setOpenModalWithdraw }: WithdrawToke
       <DialogTrigger asChild></DialogTrigger>
       <DialogContent aria-describedby='modal-description' aria-labelledby='modal-title' role='dialog'>
         <DialogTitle id='modal-title' className='hidden'>
-          Modal Title
+          {t("wallet.withdraw")}
         </DialogTitle>
         <div className='w-[550px] h-[400px] rounded-lg p-10 bg-[url("/Window/SmallWindow.png")] bg-center bg-cover flex items-center justify-center'>
           <Tabs className='w-full h-[320px]' defaultChecked defaultValue='deposit'>
             <TabsList className='grid w-full grid-cols-2 h-[50px]'>
               <TabsTrigger className='font-titan uppercase h-[40px]' value='deposit'>
-                Rút tiền
+                {t("wallet.withdraw")}
               </TabsTrigger>
               <TabsTrigger className='font-titan uppercase h-[40px]' value='instruction'>
-                Hướng dẫn
+                {t("wallet.withdrawGuide")}
               </TabsTrigger>
             </TabsList>
             <TabsContent

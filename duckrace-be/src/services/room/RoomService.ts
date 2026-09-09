@@ -1,3 +1,4 @@
+import {ErrorCodes} from "@/constants/ErrorCodes";
 import {Duck, Room} from "@/entities/Room";
 import logger from "@/helpers/logger";
 import {IRoomService} from "@/interfaces/IRoomService";
@@ -58,7 +59,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server",
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }
@@ -70,7 +72,8 @@ class RoomService implements IRoomService {
                 return {
                     statusCode: 400,
                     isSuccess: false,
-                    errorMessage: "Không tìm thấy mã phòng",
+                    errorCode: ErrorCodes.ROOM_ID_NOT_FOUND,
+                    errorMessage: ErrorCodes.ROOM_ID_NOT_FOUND,
                 };
             }
             const roomIndex = this.listRooms.findIndex((room) => room.roomId === roomId);
@@ -78,7 +81,8 @@ class RoomService implements IRoomService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Room is not found",
+                    errorCode: ErrorCodes.ROOM_NOT_FOUND,
+                    errorMessage: ErrorCodes.ROOM_NOT_FOUND,
                 };
             }
             this.listRooms.splice(roomIndex, 1);
@@ -92,7 +96,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server",
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }
@@ -105,7 +110,8 @@ class RoomService implements IRoomService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Room is not found",
+                    errorCode: ErrorCodes.ROOM_NOT_FOUND,
+                    errorMessage: ErrorCodes.ROOM_NOT_FOUND,
                 };
             }
             return {
@@ -118,7 +124,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server",
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }
@@ -128,7 +135,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 400,
                 isSuccess: false,
-                errorMessage: "Please check your data",
+                errorCode: ErrorCodes.INVALID_DATA,
+                errorMessage: ErrorCodes.INVALID_DATA,
             };
         }
         const room = this.listRooms.find((room) => room.roomId === data.roomId);
@@ -136,14 +144,16 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 400,
                 isSuccess: false,
-                errorMessage: "Room is not found",
+                errorCode: ErrorCodes.ROOM_NOT_FOUND,
+                errorMessage: ErrorCodes.ROOM_NOT_FOUND,
             };
         }
         if (room.status === "racing" || room.status === "betting") {
             return {
                 statusCode: 400,
                 isSuccess: false,
-                errorMessage: "Room is playing, you can't join now",
+                errorCode: ErrorCodes.ROOM_IS_PLAYING,
+                errorMessage: ErrorCodes.ROOM_IS_PLAYING,
             };
         }
 
@@ -155,7 +165,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 400,
                 isSuccess: false,
-                errorMessage: "You don't have enough money to join this room",
+                errorCode: ErrorCodes.NOT_ENOUGH_MONEY_TO_JOIN,
+                errorMessage: ErrorCodes.NOT_ENOUGH_MONEY_TO_JOIN,
             };
         }
         return {
@@ -187,7 +198,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Internal server error",
+                errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+                errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
             };
         }
     }
@@ -198,7 +210,8 @@ class RoomService implements IRoomService {
                 return {
                     statusCode: 400,
                     isSuccess: false,
-                    errorMessage: "Please check your data",
+                    errorCode: ErrorCodes.INVALID_DATA,
+                    errorMessage: ErrorCodes.INVALID_DATA,
                 };
             }
 
@@ -223,7 +236,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Internal server error",
+                errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+                errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
             };
         }
     }
@@ -249,7 +263,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Internal server error",
+                errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+                errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
             };
         }
     }
@@ -261,21 +276,24 @@ class RoomService implements IRoomService {
                 return {
                     statusCode: 400,
                     isSuccess: false,
-                    errorMessage: "Please check your data",
+                    errorCode: ErrorCodes.INVALID_DATA,
+                    errorMessage: ErrorCodes.INVALID_DATA,
                 };
             }
             if (room.roomBet < 0) {
                 return {
                     statusCode: 400,
                     isSuccess: false,
-                    errorMessage: "Your bet must be greater than 0",
+                    errorCode: ErrorCodes.BET_MUST_BE_POSITIVE,
+                    errorMessage: ErrorCodes.BET_MUST_BE_POSITIVE,
                 };
             }
             if (room.roomBet > 100000) {
                 return {
                     statusCode: 400,
                     isSuccess: false,
-                    errorMessage: "Your bet must be less than 100000",
+                    errorCode: ErrorCodes.BET_TOO_HIGH,
+                    errorMessage: ErrorCodes.BET_TOO_HIGH,
                 };
             }
 
@@ -287,7 +305,8 @@ class RoomService implements IRoomService {
                 return {
                     statusCode: 400,
                     isSuccess: false,
-                    errorMessage: "You don't have enough money to create this room",
+                    errorCode: ErrorCodes.NOT_ENOUGH_MONEY_TO_CREATE,
+                    errorMessage: ErrorCodes.NOT_ENOUGH_MONEY_TO_CREATE,
                 };
             }
             const newRoom = new Room();
@@ -324,7 +343,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Internal server error",
+                errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+                errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
             };
         }
     }
@@ -347,7 +367,8 @@ class RoomService implements IRoomService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Room is not found",
+                    errorCode: ErrorCodes.ROOM_NOT_FOUND,
+                    errorMessage: ErrorCodes.ROOM_NOT_FOUND,
                 };
             }
             return {
@@ -360,7 +381,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Internal server error",
+                errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+                errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
             };
         }
     }
@@ -372,7 +394,8 @@ class RoomService implements IRoomService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Room is not found",
+                    errorCode: ErrorCodes.ROOM_NOT_FOUND,
+                    errorMessage: ErrorCodes.ROOM_NOT_FOUND,
                 };
             }
             const duckNumber = room.ducks.length;
@@ -399,7 +422,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server",
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }
@@ -411,7 +435,8 @@ class RoomService implements IRoomService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Room is not found",
+                    errorCode: ErrorCodes.ROOM_NOT_FOUND,
+                    errorMessage: ErrorCodes.ROOM_NOT_FOUND,
                 };
             }
             room.ducks = room.ducks.filter((player) => !removeDuckData.ducks.includes(player.id));
@@ -429,7 +454,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server",
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }
@@ -441,7 +467,8 @@ class RoomService implements IRoomService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Room is not found",
+                    errorCode: ErrorCodes.ROOM_NOT_FOUND,
+                    errorMessage: ErrorCodes.ROOM_NOT_FOUND,
                 };
             }
             currentRoom.expiredTime = changeTimeData.expiredTime;
@@ -455,7 +482,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server",
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }
@@ -467,7 +495,8 @@ class RoomService implements IRoomService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Room is not found",
+                    errorCode: ErrorCodes.ROOM_NOT_FOUND,
+                    errorMessage: ErrorCodes.ROOM_NOT_FOUND,
                 };
             }
             updateUserData.ducks.forEach((duck, index) => {
@@ -487,7 +516,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server",
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }
@@ -499,7 +529,8 @@ class RoomService implements IRoomService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Room is not found",
+                    errorCode: ErrorCodes.ROOM_NOT_FOUND,
+                    errorMessage: ErrorCodes.ROOM_NOT_FOUND,
                 };
             }
             currentRoom.ducks.forEach((player) => {
@@ -520,7 +551,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server",
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }
@@ -532,14 +564,16 @@ class RoomService implements IRoomService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Game is not found",
+                    errorCode: ErrorCodes.GAME_NOT_FOUND,
+                    errorMessage: ErrorCodes.GAME_NOT_FOUND,
                 };
             }
             if (currentRoom.ducks.length < 5) {
                 return {
                     statusCode: 400,
                     isSuccess: false,
-                    errorMessage: "You need at least 5 ducks to start the game",
+                    errorCode: ErrorCodes.MIN_DUCKS_REQUIRED,
+                    errorMessage: ErrorCodes.MIN_DUCKS_REQUIRED,
                 };
             }
             const resetGameResponse = await this.resetGame(startGameData);
@@ -553,7 +587,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server",
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }
@@ -565,7 +600,8 @@ class RoomService implements IRoomService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Room is not found",
+                    errorCode: ErrorCodes.ROOM_NOT_FOUND,
+                    errorMessage: ErrorCodes.ROOM_NOT_FOUND,
                 };
             }
 
@@ -619,7 +655,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server",
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }
@@ -632,7 +669,8 @@ class RoomService implements IRoomService {
                 return {
                     statusCode: 404,
                     isSuccess: false,
-                    errorMessage: "Room is not found",
+                    errorCode: ErrorCodes.ROOM_NOT_FOUND,
+                    errorMessage: ErrorCodes.ROOM_NOT_FOUND,
                 };
             }
             currentRoom.status = "betting";
@@ -646,7 +684,8 @@ class RoomService implements IRoomService {
             return {
                 statusCode: 500,
                 isSuccess: false,
-                errorMessage: "Error from server",
+                errorCode: ErrorCodes.SERVER_ERROR,
+                errorMessage: ErrorCodes.SERVER_ERROR,
             };
         }
     }

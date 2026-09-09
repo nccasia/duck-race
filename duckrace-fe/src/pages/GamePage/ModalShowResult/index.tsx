@@ -4,11 +4,13 @@ import useGameStore from "@/stores/gameStore";
 import useRoomStore from "@/stores/roomStore";
 import useUserStore from "@/stores/userStore";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface IModalShowResultProps {
   onResetGame: () => void;
 }
 const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
+  const { t } = useTranslation();
   const {gameStatus, setOpenModalBet, gameResult } =
     useGameStore();
   const {
@@ -44,11 +46,11 @@ const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
         role="dialog"
       >
         <DialogTitle className="text-center text-[20px] hidden">
-          Tạo phòng
+          {t("common.result")}
         </DialogTitle>
         <div className='w-[350px] h-[600px] rounded-lg p-5 bg-[url("/Window/MenuWindow.png")] bg-center bg-cover '>
           <div className="flex justify-center items-center h-[45px] text-[40px] text-gray-600 font-titan">
-            Result
+            {t("common.result")}
           </div>
           <div className="h-[230px] flex items-end justify-center relative">
             <img className="w-[300px]" src="/rank.png" />
@@ -91,7 +93,7 @@ const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
                 gameResult.bettors.includes(currentUser.id ?? "")
                   ? gameResult?.winners && gameResult.winners.length > 0
                     ? gameResult.winners.includes(currentUser.id ?? "")
-                      ? gameResult.winBet
+                      ? gameResult?.winBet
                       : 0
                     : gameResult?.winBet
                   : 0}
@@ -120,7 +122,7 @@ const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
                 />
                 <div className="flex  justify-center items-center gap-2 text-[30px] font-titan text-white absolute top-1 left-1/2 transform -translate-x-1/2 ">
                   <img className="w-[20px] " src="/Icons/RefreshIcon.png" />
-                  <span>Reset</span>
+                  <span>{t("common.reset")}</span>
                 </div>
               </button>
             ) : (
@@ -134,7 +136,7 @@ const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
                 />
                 <div className="flex  justify-center items-center gap-2 text-[30px] font-titan text-white absolute top-1 left-1/2 transform -translate-x-1/2 ">
                   <img className="w-[20px] " src="/Icons/RefreshIcon.png" />
-                  <span>Close</span>
+                  <span>{t("common.close")}</span>
                 </div>
               </div>
             )}
@@ -145,7 +147,7 @@ const ModalShowResult = ({ onResetGame }: IModalShowResultProps) => {
               <img className="w-full h-full" src="/Buttons/Button-hover.png" />
               <div className="flex  justify-center items-center gap-2 text-[30px] font-titan text-white absolute top-1 left-1/2 transform -translate-x-1/2 ">
                 <img className="w-[20px] " src="/Icons/RewardIcon.png" />
-                <span>Rank</span>
+                <span>{t("common.rank")}</span>
               </div>
             </button>
           </div>

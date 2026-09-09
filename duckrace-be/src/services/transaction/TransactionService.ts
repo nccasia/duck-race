@@ -1,3 +1,4 @@
+import { ErrorCodes, TransactionNotes } from "@/constants/ErrorCodes";
 import { LocalStorage } from "@/constants/LocalStorage";
 import { UpdateWalletTokenResponse } from "@/entities/User";
 import logger from "@/helpers/logger";
@@ -26,14 +27,16 @@ class TransactionService implements ITransactionService {
         return {
           statusCode: StatusCodes.UNAUTHORIZED,
           isSuccess: false,
-          errorMessage: "Unauthorized",
+          errorCode: ErrorCodes.UNAUTHORIZED,
+          errorMessage: ErrorCodes.UNAUTHORIZED,
         };
       }
       if (data.amount <= 0) {
         return {
           statusCode: StatusCodes.BAD_REQUEST,
           isSuccess: false,
-          errorMessage: "Amount must be greater than 0",
+          errorCode: ErrorCodes.AMOUNT_MUST_BE_POSITIVE,
+          errorMessage: ErrorCodes.AMOUNT_MUST_BE_POSITIVE,
         };
       }
       const dataTransaction: TransactionData = {
@@ -41,7 +44,7 @@ class TransactionService implements ITransactionService {
         amount: data.amount,
         type: "DEPOSIT",
         isIncrease: true,
-        note: "Deposit token",
+        note: TransactionNotes.DEPOSIT,
       };
       const transaction = await this.prismaService.transaction.create({
         data: dataTransaction,
@@ -50,7 +53,8 @@ class TransactionService implements ITransactionService {
         return {
           statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
           isSuccess: false,
-          errorMessage: "Error when save transaction",
+          errorCode: ErrorCodes.TRANSACTION_SAVE_ERROR,
+          errorMessage: ErrorCodes.TRANSACTION_SAVE_ERROR,
         };
       }
       const changeWallet = await this.userService.updateWalletToken(userId, data.amount);
@@ -72,7 +76,8 @@ class TransactionService implements ITransactionService {
       return {
         statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
         isSuccess: false,
-        errorMessage: "Internal server error",
+        errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+        errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
       };
     }
   }
@@ -85,14 +90,16 @@ class TransactionService implements ITransactionService {
         return {
           statusCode: StatusCodes.UNAUTHORIZED,
           isSuccess: false,
-          errorMessage: "Unauthorized",
+          errorCode: ErrorCodes.UNAUTHORIZED,
+          errorMessage: ErrorCodes.UNAUTHORIZED,
         };
       }
       if (data.amount <= 0) {
         return {
           statusCode: StatusCodes.BAD_REQUEST,
           isSuccess: false,
-          errorMessage: "Amount must be greater than 0",
+          errorCode: ErrorCodes.AMOUNT_MUST_BE_POSITIVE,
+          errorMessage: ErrorCodes.AMOUNT_MUST_BE_POSITIVE,
         };
       }
       const user = await this.userService.getUserById(userId);
@@ -103,7 +110,8 @@ class TransactionService implements ITransactionService {
         return {
           statusCode: StatusCodes.BAD_REQUEST,
           isSuccess: false,
-          errorMessage: "Not enough token",
+          errorCode: ErrorCodes.NOT_ENOUGH_TOKEN,
+          errorMessage: ErrorCodes.NOT_ENOUGH_TOKEN,
         };
       }
 
@@ -118,7 +126,7 @@ class TransactionService implements ITransactionService {
         amount: data.amount,
         type: ETransactionType.WITHDRAW,
         isIncrease: false,
-        note: "Withdraw token",
+        note: TransactionNotes.WITHDRAW,
       };
 
       const transaction = await this.prismaService.transaction.create({
@@ -129,7 +137,8 @@ class TransactionService implements ITransactionService {
         return {
           statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
           isSuccess: false,
-          errorMessage: "Error when save transaction",
+          errorCode: ErrorCodes.TRANSACTION_SAVE_ERROR,
+          errorMessage: ErrorCodes.TRANSACTION_SAVE_ERROR,
         };
       }
       const changeWallet = await this.userService.updateWalletToken(userId, -data.amount);
@@ -151,7 +160,8 @@ class TransactionService implements ITransactionService {
       return {
         statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
         isSuccess: false,
-        errorMessage: "Internal server error",
+        errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+        errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
       };
     }
   }
@@ -178,7 +188,8 @@ class TransactionService implements ITransactionService {
       return {
         statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
         isSuccess: false,
-        errorMessage: "Internal server error",
+        errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+        errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
       };
     }
   }

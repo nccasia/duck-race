@@ -1,4 +1,5 @@
 import Application from "@/app";
+import {ErrorCodes} from "@/constants/ErrorCodes";
 import {SocketEvents} from "@/constants/SocketEvent";
 import {Room} from "@/entities/Room";
 import {IGameService} from "@/interfaces/IGameService";
@@ -199,7 +200,8 @@ class SocketService implements ISocketService {
             this.socketServer.to(roomData.roomId).emit(SocketEvents.EMIT.USER_LEFT_ROOM, {
                 statusCode: 200,
                 isSuccess: true,
-                errorMessage: "User leave room successfully",
+                errorCode: ErrorCodes.USER_LEAVE_ROOM_SUCCESS,
+                errorMessage: ErrorCodes.USER_LEAVE_ROOM_SUCCESS,
                 data: {
                     userId: data.userId,
                     roomInfo: leaveRoomResponse.data as Room,
@@ -324,7 +326,10 @@ class SocketService implements ISocketService {
     onStartBet = async (socket: Socket, data: IStartGameSubmitDTO) => {
         if (!data.roomId) {
             console.log(`User ${socket.id} start bet failed: gameId is required`);
-            socket.emit(SocketEvents.EMIT.START_BET_FAILED, {errorMessage: "gameId is required"});
+            socket.emit(SocketEvents.EMIT.START_BET_FAILED, {
+                errorCode: ErrorCodes.GAME_ID_REQUIRED,
+                errorMessage: ErrorCodes.GAME_ID_REQUIRED,
+            });
             return;
         }
         const roomInfo = await this._roomService.getRoomById(data.roomId);
@@ -371,7 +376,8 @@ class SocketService implements ISocketService {
             socket.emit(SocketEvents.EMIT.BET_FOR_DUCK_SUCCESS, {
                 statusCode: 200,
                 isSuccess: true,
-                errorMessage: "Bet for duck successfully",
+                errorCode: ErrorCodes.BET_FOR_DUCK_SUCCESS,
+                errorMessage: ErrorCodes.BET_FOR_DUCK_SUCCESS,
                 data: {
                     ducks: betForDuckResponse.data.ducks,
                     betAmount: data.betAmount * data.ducks.length,

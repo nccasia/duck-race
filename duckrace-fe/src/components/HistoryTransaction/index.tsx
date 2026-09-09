@@ -1,7 +1,9 @@
+import { translateError, translateTransactionNote } from "@/i18n/translateError";
 import transactionService from "@/services/transactionServices";
 import useUserStore from "@/stores/userStore";
 import { formatDateTime } from "@/utils/Functions/formatTimes";
 import { memo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "../ui/dialog";
 
@@ -10,6 +12,7 @@ interface HistoryTransactionProps {
   setOpenModalHistory: (value: boolean) => void;
 }
 const HistoryTransaction = ({ openModalHistory, setOpenModalHistory }: HistoryTransactionProps) => {
+  const { t } = useTranslation();
   const { currentUser, changeHistoryTransaction, historyTransaction } = useUserStore();
   useEffect(() => {
     if (!currentUser.id) return;
@@ -19,7 +22,7 @@ const HistoryTransaction = ({ openModalHistory, setOpenModalHistory }: HistoryTr
         if (response.isSuccess) {
           changeHistoryTransaction(response.data ?? []);
         } else {
-          toast.error(response.errorMessage);
+          toast.error(translateError(response));
         }
       } catch (error) {
         console.log("Error in getHistoryTransaction", error);
@@ -31,9 +34,11 @@ const HistoryTransaction = ({ openModalHistory, setOpenModalHistory }: HistoryTr
     <Dialog open={openModalHistory} onOpenChange={setOpenModalHistory}>
       <DialogTrigger asChild></DialogTrigger>
       <DialogContent aria-describedby='modal-description' aria-labelledby='modal-title' role='dialog'>
-        <DialogTitle id='modal-title' className='hidden'></DialogTitle>
+        <DialogTitle id='modal-title' className='hidden'>
+          {t("wallet.history")}
+        </DialogTitle>
         <div className='w-[680px] h-[500px] rounded-lg p-10 pt-5 bg-[url("/Window/SmallWindow.png")] bg-center bg-cover'>
-          <div className='text-center font-titan text-gray-600 uppercase'>Lịch sử giao dịch</div>
+          <div className='text-center font-titan text-gray-600 uppercase'>{t("wallet.history")}</div>
           <div className='h-[calc(100%-70px)] p-2 mt-3 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-red-500 [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar-track]:bg-gray-200'>
             {historyTransaction.map((item, index) => (
               <div
@@ -44,7 +49,7 @@ const HistoryTransaction = ({ openModalHistory, setOpenModalHistory }: HistoryTr
                 <div className={`w-[100px] text-center ${item.isIncrease ? "text-green-500" : "text-red-500"}`}>
                   {item.isIncrease ? "+" : "-"} {item.amount}
                 </div>
-                <div className='flex-1 text-center'>{item.note}</div>
+                <div className='flex-1 text-center'>{translateTransactionNote(item.note)}</div>
                 <div className='w-[100px] text-center'>{formatDateTime(item.createdAt)}</div>
               </div>
             ))}

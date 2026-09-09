@@ -1,9 +1,11 @@
 import { SocketEvents } from "@/constants/SocketEvents";
 import { useSocket } from "@/providers/SocketProvider";
 import useRoomStore from "@/stores/roomStore";
+import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 
 const AddUserTab = () => {
+  const { t } = useTranslation();
   const { addDuckText, setAddDuckText } = useRoomStore();
   const socket = useSocket();
   const { roomId } = useParams<{ roomId: string }>();
@@ -26,7 +28,7 @@ const AddUserTab = () => {
         className='w-[150px] h-[70px] mx-auto mt-3 relative cursor-pointer hover:scale-[0.99] transition-all active:scale-[1.0]'
       >
         <img className='w-full' src='/Buttons/Button.png' />
-        <span className='absolute top-3 left-0 flex items-center justify-center w-full text-[25px] font-titan'>Thêm</span>
+        <span className='absolute top-3 left-0 flex items-center justify-center w-full text-[25px] font-titan'>{t("common.add")}</span>
       </div>
     </div>
   );

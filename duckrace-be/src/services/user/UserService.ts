@@ -1,3 +1,4 @@
+import { ErrorCodes } from "@/constants/ErrorCodes";
 import { GetAccessToken } from "@/entities/User";
 import logger from "@/helpers/logger";
 import { IJWTService } from "@/interfaces/IJWTService";
@@ -49,7 +50,8 @@ class UserService implements IUserService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy người dùng",
+          errorCode: ErrorCodes.USER_NOT_FOUND,
+          errorMessage: ErrorCodes.USER_NOT_FOUND,
         };
       }
       const generateTokenData = {
@@ -74,7 +76,8 @@ class UserService implements IUserService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi đăng nhập từ hệ thống",
+        errorCode: ErrorCodes.LOGIN_SYSTEM_ERROR,
+        errorMessage: ErrorCodes.LOGIN_SYSTEM_ERROR,
       };
     }
   }
@@ -92,7 +95,8 @@ class UserService implements IUserService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+        errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
       };
     }
   }
@@ -117,7 +121,8 @@ class UserService implements IUserService {
         return {
           statusCode: 401,
           isSuccess: false,
-          errorMessage: "You are not authorized with Mezon, please login and try again",
+          errorCode: ErrorCodes.MEZON_AUTH_FAILED,
+          errorMessage: ErrorCodes.MEZON_AUTH_FAILED,
         };
       }
       return {
@@ -130,7 +135,8 @@ class UserService implements IUserService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi đăng nhập từ Mezon",
+        errorCode: ErrorCodes.MEZON_LOGIN_ERROR,
+        errorMessage: ErrorCodes.MEZON_LOGIN_ERROR,
       };
     }
   }
@@ -142,7 +148,8 @@ class UserService implements IUserService {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Vui lòng cung cấp đủ thông tin người dùng!",
+          errorCode: ErrorCodes.USER_INFO_REQUIRED,
+          errorMessage: ErrorCodes.USER_INFO_REQUIRED,
         };
       }
       const addUserResponse = await this.prismaService.user.create({
@@ -164,7 +171,8 @@ class UserService implements IUserService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+        errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
       };
     }
   }
@@ -175,14 +183,16 @@ class UserService implements IUserService {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Không tìm thấy mã người dùng",
+          errorCode: ErrorCodes.USER_ID_NOT_FOUND,
+          errorMessage: ErrorCodes.USER_ID_NOT_FOUND,
         };
       }
       if (!amount) {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Vui lòng cung cấp số tiền cần cập nhật!",
+          errorCode: ErrorCodes.WALLET_AMOUNT_REQUIRED,
+          errorMessage: ErrorCodes.WALLET_AMOUNT_REQUIRED,
         };
       }
       const user = await this.prismaService.user.findUnique({
@@ -194,14 +204,16 @@ class UserService implements IUserService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy người dùng",
+          errorCode: ErrorCodes.USER_NOT_FOUND,
+          errorMessage: ErrorCodes.USER_NOT_FOUND,
         };
       }
       if (user.wallet + amount < 0) {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Số tiền trong ví không đủ để thực hiện giao dịch!",
+          errorCode: ErrorCodes.INSUFFICIENT_WALLET,
+          errorMessage: ErrorCodes.INSUFFICIENT_WALLET,
         };
       }
       const updateWallet = await this.prismaService.user.update({
@@ -227,7 +239,8 @@ class UserService implements IUserService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+        errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
       };
     }
   }
@@ -239,7 +252,8 @@ class UserService implements IUserService {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Không tìm thấy mã người dùng",
+          errorCode: ErrorCodes.USER_ID_NOT_FOUND,
+          errorMessage: ErrorCodes.USER_ID_NOT_FOUND,
         };
       }
       await this.prismaService.user.delete({
@@ -257,7 +271,8 @@ class UserService implements IUserService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+        errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
       };
     }
   }
@@ -269,7 +284,8 @@ class UserService implements IUserService {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Không tìm thấy mã người dùng",
+          errorCode: ErrorCodes.USER_ID_NOT_FOUND,
+          errorMessage: ErrorCodes.USER_ID_NOT_FOUND,
         };
       }
       const user = await this.prismaService.user.findUnique({
@@ -281,7 +297,8 @@ class UserService implements IUserService {
         return {
           statusCode: 404,
           isSuccess: false,
-          errorMessage: "Không tìm thấy người dùng",
+          errorCode: ErrorCodes.USER_NOT_FOUND,
+          errorMessage: ErrorCodes.USER_NOT_FOUND,
         };
       }
       return {
@@ -294,7 +311,8 @@ class UserService implements IUserService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+        errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
       };
     }
   }
@@ -306,7 +324,8 @@ class UserService implements IUserService {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Không tìm thấy mã socket",
+          errorCode: ErrorCodes.SOCKET_ID_NOT_FOUND,
+          errorMessage: ErrorCodes.SOCKET_ID_NOT_FOUND,
         };
       }
       // const user = this.listUsers.find((user) => user.socketId === socketId);
@@ -327,7 +346,8 @@ class UserService implements IUserService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+        errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
       };
     }
   }
@@ -360,7 +380,8 @@ class UserService implements IUserService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+        errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
       };
     }
   }
@@ -371,7 +392,8 @@ class UserService implements IUserService {
         return {
           statusCode: 400,
           isSuccess: false,
-          errorMessage: "Không tìm thấy mã người dùng",
+          errorCode: ErrorCodes.USER_ID_NOT_FOUND,
+          errorMessage: ErrorCodes.USER_ID_NOT_FOUND,
         };
       }
       // const user = this.listUsers.find((user) => user.id === userId);
@@ -392,7 +414,8 @@ class UserService implements IUserService {
       return {
         statusCode: 500,
         isSuccess: false,
-        errorMessage: "Lỗi từ hệ thống",
+        errorCode: ErrorCodes.INTERNAL_SERVER_ERROR,
+        errorMessage: ErrorCodes.INTERNAL_SERVER_ERROR,
       };
     }
   }
