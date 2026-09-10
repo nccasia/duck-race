@@ -1,8 +1,7 @@
 {
   "language": {
     "label": "Language",
-    "en": "English",
-    "vi": "Tiếng Việt"
+    "en": "English"
   },
   "common": {
     "save": "Save",

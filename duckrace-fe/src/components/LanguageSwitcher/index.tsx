@@ -2,11 +2,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { Languages } from "lucide-react";
 import { useTranslation } from "react-i18next";
-
-const LANGUAGES = [
-  { code: "vi", labelKey: "language.vi", short: "VI" },
-  { code: "en", labelKey: "language.en", short: "EN" },
-] as const;
+import { LANGUAGES } from "@/constants/languages";
 
 const LanguageSwitcher = () => {
   const { t, i18n } = useTranslation();
